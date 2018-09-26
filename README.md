@@ -1,6 +1,7 @@
 # GUY_BATTLE
 
 A 2D fighting game I made, written in C using SDL!
+
 I also wrote the music in SuperCollider and drew the art/animations in GIMP.
 
 It's a work in progress right now. Planned features (in order) include:
@@ -15,15 +16,19 @@ It's a work in progress right now. Planned features (in order) include:
 # Dependencies
 
 only works on MacOS right now
+
 gcc
 
 # Install
 
 git clone https://github.com/mlevatich/GUY_BATTLE.git
+
 cd GUY_BATTLE
+
 make
 
 # Run
 
 ./GUY_BATTLE
+
 Controls can be viewed in game.  Have fun!
