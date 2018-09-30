@@ -30,6 +30,6 @@ make
 
 # Run
 
-./GUY_BATTLE
+```./GUY_BATTLE```
 
 Controls can be viewed in game.  Have fun!
