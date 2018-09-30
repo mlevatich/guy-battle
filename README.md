@@ -22,11 +22,11 @@ gcc
 
 # Install
 
+```
 git clone https://github.com/mlevatich/GUY_BATTLE.git
-
 cd GUY_BATTLE
-
 make
+```
 
 # Run
 
