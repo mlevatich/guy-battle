@@ -20,7 +20,7 @@ bool loadGame()
     if(!renderer) return false;
     
     // Load music
-    main_theme = Mix_LoadMUS("Sound/Twilight_of_the_Gods.mp3");
+    main_theme = Mix_LoadMUS("Sound/Twilight_of_the_Gods.wav");
     if(!main_theme) return false;
     
     // Load sound effects
@@ -102,6 +102,7 @@ int main(int argc, char* args[])
 {
     // Load game
     if(!loadGame()) {
+	printf("error: %s\n", Mix_GetError());
         fprintf(stderr,"Error: Initialization Failed\n");
         return 1;
     }

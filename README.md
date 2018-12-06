@@ -13,19 +13,29 @@ It's a work in progress right now. Planned features (in order) include:
 - AI and 1 player mode
 - Improved animations
 
-# Dependencies
+# Dependencies/Install
 
-only works on MacOS right now
+I've only tested on MacOS as of now - no guarantees for Windows or Linux, but should 
+be compatible with older MacOS versions.
 
-gcc
+You'll need to install SDL2 and SDL_mixer - on Mac this can be done easily with brew:
 
-# Install
+~~~~
+# if you need to install brew
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
+# installing sdl2 and sdl2 mixer
+brew install sdl2
+brew install sdl2_mixer
+~~~~
+
+Once that's done, install GUY_BATTLE with the following:
+
+~~~~
 git clone https://github.com/mlevatich/GUY_BATTLE.git
-
 cd GUY_BATTLE
-
 make
+~~~~
 
 # Run
 
