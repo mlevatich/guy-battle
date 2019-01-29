@@ -39,6 +39,8 @@ make
 
 # Run
 
+~~~~
 ./GUY_BATTLE
+~~~~
 
 Controls can be viewed in game.  Have fun!
