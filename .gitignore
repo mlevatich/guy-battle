@@ -1,0 +1,5 @@
+GUY_BATTLE
+*.log
+*.o
+.DS_Store
+.DS_Store?

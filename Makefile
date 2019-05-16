@@ -1,10 +1,11 @@
 CC     = gcc
 CFLAGS = -g3 -std=c99 -pedantic -Wall
 LIBS   = -lSDL2 -lSDL2_mixer
-DEPS   = sprite.h interface.h level.h global_utils.h
-OBJ    = main.o sprite.o interface.o level.o global_utils.o 
+DEPS   = headers/sprite.h headers/interface.h headers/level.h headers/constants.h
+OBJ    = main.o sprite.o interface.o level.o
+SRC    = src
 
-%.o: %.c $(DEPS)
+%.o: $(SRC)/%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 GUY_BATTLE: $(OBJ)

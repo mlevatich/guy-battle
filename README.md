@@ -10,12 +10,12 @@ It's a work in progress right now. Planned features (in order) include:
 - Collisions / hp loss / dying (i.e. the full game loop)
 - Three new spells! For a total of five
 - Better art for Phoenix Mountain
-- AI and 1 player mode
+- AI and single player mode
 - Improved animations
 
 # Dependencies/Install
 
-I've only tested on MacOS as of now - no guarantees for Windows or Linux, but should 
+I've only tested on MacOS as of now - no guarantees for Windows or Linux, but should
 be compatible with older MacOS versions.
 
 You'll need to install SDL2 and SDL_mixer - on Mac this can be done easily with brew:
