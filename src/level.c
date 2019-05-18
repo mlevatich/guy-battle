@@ -35,15 +35,118 @@ typedef struct foreground
 enum drift_types
 { SCROLL, DRIFT };
 
-// Arrays of backgrounds and foregrounds, with lengths
-Background* backgrounds = NULL;
-Foreground* foregrounds = NULL;
-int numBackgrounds = 2;
-int numForegrounds = 2;
+#define NUM_BACKGROUNDS 2       // Number of existing backgrounds
+#define NUM_FOREGROUNDS 2       // Number of existing foregrounds
 
-// Current background and foreground
-int currentBackground = FOREST;
-int currentForeground = FOREST;
+Background* backgrounds = NULL; // Array of existing backgrounds
+Foreground* foregrounds = NULL; // Array of existing foregrounds
+
+int currentBackground = FOREST; // Current background
+int currentForeground = FOREST; // Current foreground
+
+/* SETTERS */
+
+// Switch the level to a new one
+void switchLevel(int new_level)
+{
+    currentBackground = new_level;
+    currentForeground = new_level;
+}
+
+/* GETTERS */
+
+// Returns current level
+int getLevel()
+{
+    return currentForeground;
+}
+
+// Returns the platforms on the current foreground
+int* getPlatforms()
+{
+    return foregrounds[currentForeground]->platforms;
+}
+
+// Returns the walls on the current foreground
+int* getWalls()
+{
+    return foregrounds[currentForeground]->walls;
+}
+
+// Returns starting position of the guys on the current foreground
+int* getStartingPositions(int fg)
+{
+    return foregrounds[fg]->starting_positions;
+}
+
+/* PER FRAME UPDATES */
+
+// Animate the background
+void moveBackground()
+{
+    // Update position of the current background according to its velocity
+    Background bg = backgrounds[currentBackground];
+    bg->x += bg->x_vel;
+    bg->y += bg->y_vel;
+
+    if(bg->drift_type == DRIFT)
+    {
+        // Drifting backgrounds bounce when they reach the image's edge
+        int reset_to = 0;
+        if(bg->x >= (reset_to = bg->width - SCREEN_WIDTH) || bg->x <= (reset_to = 0))
+        {
+            bg->x_vel *= -1;
+            bg->x = reset_to;
+        }
+        if(bg->y >= (reset_to = bg->height - SCREEN_HEIGHT) || bg->y <= (reset_to = 0))
+        {
+            bg->y_vel *= -1;
+            bg->y = reset_to;
+        }
+    }
+    else
+    {
+        // Scrolling backgrounds reset so they appear to loop infinitely
+        if(bg->x >= bg->width || bg->x <= bg->width * -1)
+        {
+            bg->x = 0;
+        }
+    }
+}
+
+// Render the current background
+static void renderBackground()
+{
+    // Draw the background at it's current position
+    Background bg = backgrounds[currentBackground];
+    SDL_Rect quad = {(int) bg->x * -1, (int) bg->y * -1, bg->width, bg->height};
+    SDL_RenderCopy(renderer, bg->image, NULL, &quad);
+
+    // If the background scrolls, we may need to render it twice to create the illusion of looping
+    if(bg->drift_type == SCROLL && (bg->x + SCREEN_WIDTH > bg->width || bg->x < 0))
+    {
+        quad.x = (int)bg->x * -1 + convert(bg->x > 0) * bg->width;
+        quad.y = (int)bg->y * -1;
+        quad.w = bg->width;
+        quad.h = bg->height;
+        SDL_RenderCopy(renderer, bg->image, NULL, &quad);
+    }
+}
+
+// Render the current foreground
+static void renderForeground()
+{
+    SDL_RenderCopy(renderer, foregrounds[currentForeground]->image, NULL, NULL);
+}
+
+// Render the current level
+void renderLevel()
+{
+    renderBackground();
+    renderForeground();
+}
+
+/* DATA ALLOCATION / INITIALIZATION */
 
 // Assign background fields
 static Background initBackground(const char* path, char drift, int w, int h, int x, int y, double x_vel, double y_vel)
@@ -89,8 +192,8 @@ static Foreground initForeground(const char* path, int* platforms, int* walls, i
 void loadLevels()
 {
     // Make space for backgrounds and foregrounds
-    backgrounds = (Background*) malloc(numBackgrounds * sizeof(Background));
-    foregrounds = (Foreground*) malloc(numForegrounds * sizeof(Foreground));
+    backgrounds = (Background*) malloc(NUM_BACKGROUNDS * sizeof(Background));
+    foregrounds = (Foreground*) malloc(NUM_FOREGROUNDS * sizeof(Foreground));
     int numPlatforms; int numWalls;
 
     // Initialize backgrounds
@@ -150,6 +253,8 @@ void loadLevels()
     foregrounds[VOLCANO] = initForeground("art/volcano_foreground.bmp", volcano_platforms, volcano_walls, volcano_starts);
 }
 
+/* DATA UNLOADING */
+
 // Free a background from memory
 static void freeBackground(Background bg)
 {
@@ -170,114 +275,9 @@ static void freeForeground(Foreground fg)
 // Free all backgrounds and foregrounds
 void freeLevels()
 {
-    for(int i = 0; i < numBackgrounds; i++) freeBackground(backgrounds[i]);
+    for(int i = 0; i < NUM_BACKGROUNDS; i++) freeBackground(backgrounds[i]);
     free(backgrounds);
 
-    for(int i = 0; i < numForegrounds; i++) freeForeground(foregrounds[i]);
+    for(int i = 0; i < NUM_FOREGROUNDS; i++) freeForeground(foregrounds[i]);
     free(foregrounds);
-}
-
-// Render an infinitely scrolling background TODO: add this to movebackground, collapse ths fxn with renderDrift
-static void renderScrollBackground(Background bg)
-{
-    // Move the background according to velocity
-    SDL_Rect quad = {(int)bg->x * -1, (int)bg->y * -1, bg->width, bg->height};
-    SDL_RenderCopy(renderer, bg->image, NULL, &quad);
-    if(bg->x + SCREEN_WIDTH > bg->width || bg->x < 0)
-    {
-        quad.x = (int)bg->x * -1 + convert(bg->x > 0) * bg->width;
-        quad.y = (int)bg->y * -1;
-        quad.w = bg->width;
-        quad.h = bg->height;
-        SDL_RenderCopy(renderer, bg->image, NULL, &quad);
-    }
-
-    // Reset the background to loop it infinitely
-    if(bg->x >= bg->width || bg->x <= bg->width * -1)
-    {
-        bg->x = 0;
-    }
-}
-
-// Render a drifting background
-static void renderDriftBackground(Background bg)
-{
-    SDL_Rect quad = {(int) bg->x * -1, (int) bg->y * -1, bg->width, bg->height};
-    SDL_RenderCopy(renderer, bg->image, NULL, &quad);
-}
-
-// Render the current background
-void renderBackground()
-{
-    if(backgrounds[currentBackground]->drift_type == SCROLL)
-    {
-        renderScrollBackground(backgrounds[currentBackground]);
-    }
-    else
-    {
-        renderDriftBackground(backgrounds[currentBackground]);
-    }
-}
-
-// Render the current foreground
-void renderForeground()
-{
-    SDL_RenderCopy(renderer, foregrounds[currentForeground]->image, NULL, NULL);
-}
-
-// Animate the background
-void moveBackground()
-{
-    Background bg = backgrounds[currentBackground];
-    bg->x += bg->x_vel;
-    bg->y += bg->y_vel;
-    if(bg->drift_type == DRIFT)
-    {
-        int reset_to = 0;
-        if(bg->x >= (reset_to = bg->width - SCREEN_WIDTH) || bg->x <= (reset_to = 0))
-        {
-            bg->x_vel *= -1;
-            bg->x = reset_to;
-        }
-        if(bg->y >= (reset_to = bg->height - SCREEN_HEIGHT) || bg->y <= (reset_to = 0))
-        {
-            bg->y_vel *= -1;
-            bg->y = reset_to;
-        }
-    }
-    else
-    {
-        // TODO
-    }
-}
-
-// Switch the level to a new one
-void switchLevel(int new_level)
-{
-    currentBackground = new_level;
-    currentForeground = new_level;
-}
-
-// Returns the platforms on the current foreground
-int* getPlatforms()
-{
-    return foregrounds[currentForeground]->platforms;
-}
-
-// Returns the walls on the current foreground
-int* getWalls()
-{
-    return foregrounds[currentForeground]->walls;
-}
-
-// Returns starting position of the guys on the current foreground
-int* getStartingPositions(int fg)
-{
-    return foregrounds[fg]->starting_positions;
-}
-
-// Returns current level
-int getLevel()
-{
-    return currentForeground;
 }

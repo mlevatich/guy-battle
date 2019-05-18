@@ -16,10 +16,9 @@
 #define SCREEN_WIDTH 1024
 #define SCREEN_HEIGHT 768
 
-// Frame rate
-#define FRAME_INCREMENT 0.1
+// Frame rate constants
+#define ANIMATION_SPEED 1
 #define MAX_FPS 60
-#define MS_PER_FRAME 16.666
 
 // Cardinal directions
 enum directions

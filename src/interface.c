@@ -19,7 +19,7 @@ typedef struct select_arrow_spot
     double x;
     double y;
     char mode_in;
-    char return_val;
+    char mode_out;
 }* Selection;
 
 // List of toolbar elements
@@ -30,71 +30,86 @@ enum elements
 enum text_align
 { L, C };
 
+#define NUM_ELEMENTS 4      // Total number of toolbar elements
+#define NUM_MENU_OPTIONS 5  // Total number of menu options (across all menus)
+#define FONT_SIZE 30        // Size in pixels of a letter
+
 SDL_Texture* toolbar;       // Texture containing all toolbar elements
 Tool* element_list;         // Array of all toolbar elements
 Selection* menu_selections; // Array containing locations and return values of select arrows
-int numElements = 4;        // Total number of toolbar elements
-int numMenuOptions = 5;     // Total number of menu options (across all menus)
-int font_size = 30;         // Size in pixels of a letter
+int score = 0;              // The score, for 1-player games
 
-// Assign toolbar element fields
-static Tool initTool(char id, short sheet_x, short sheet_y, short width, short height, double x, double y)
+/* SETTERS */
+
+// Move the text selection arrow
+int hover(char mode, int direction)
 {
-    Tool this_tool = (Tool) malloc(sizeof(struct toolbar_element));
-    this_tool->id = id;
-    this_tool->sheet_pos_x = sheet_x;   this_tool->sheet_pos_y = sheet_y;
-    this_tool->width = width;           this_tool->height = height;
-    this_tool->x = x;                   this_tool->y = y;
-    return this_tool;
+    double current_y = element_list[ARROW]->y;
+    double best_y = 999; int ret_val   = 0;
+    double best_x = 0;   int self_ret  = 0;
+
+    // From the menu options active in this mode, pick the closest in the direction we're moving
+    for(int i = 0; i < NUM_MENU_OPTIONS; i++)
+    {
+        Selection op = menu_selections[i];
+        if(op->mode_in == mode)
+        {
+            if(op->y == current_y)
+            {
+                self_ret = op->mode_out;
+            }
+            else if(direction == UP && op->y < current_y && fabs(op->y - current_y) < fabs(best_y - current_y))
+            {
+                best_y = op->y;
+                best_x = op->x;
+                ret_val = op->mode_out;
+            }
+            else if(direction == DOWN && op->y > current_y && fabs(op->y - current_y) < fabs(best_y - current_y))
+            {
+                best_y = op->y;
+                best_x = op->x;
+                ret_val = op->mode_out;
+            }
+        }
+    }
+
+    // If we didn't find anything (there were no further options in the direction we moved),
+    // stick with the current spot
+    if(best_y == 999) return self_ret;
+
+    // Otherwise, switch to the new spot
+    element_list[ARROW]->x = best_x;
+    element_list[ARROW]->y = best_y;
+    return ret_val;
 }
 
-// Assign menu option fields
-static Selection initMenuOption(char mode_in, char return_val, double x, double y)
+// Change the score
+void setScore(int new_score)
 {
-    Selection this_option = (Selection) malloc(sizeof(struct select_arrow_spot));
-    this_option->x = x;
-    this_option->y = y;
-    this_option->mode_in = mode_in;
-    this_option->return_val = return_val;
-    return this_option;
+    score = new_score;
 }
 
-// Load the toolbar texture, toolbar elements, and selection text into memory
-void loadInterface()
+/* GETTERS */
+
+// Convert an integer score into a string readable by renderText
+static char* stringScore(int score)
 {
-    // Load the texture containing all toolbar elements and the alphabet
-    toolbar = loadTexture("art/Toolbar.bmp");
+    // Copy number into buffer
+    char* str = (char*) malloc(sizeof(char) * 7);
+    sprintf(str, "%06d", score);
 
-    // Make space for the toolbar elements and initialize them
-    element_list = (Tool*) malloc(numElements * sizeof(Tool));
-    element_list[COOLDOWN_BAR] = initTool(COOLDOWN_BAR, 700, 0, 39, 39, 86, 64);
-    element_list[HEALTH_BAR] = initTool(HEALTH_BAR, 0, 0, 350, 80, 50, 25);
-    element_list[LOGO] = initTool(LOGO, 0, 100, 520, 225, 258, 50);
-    element_list[ARROW] = initTool(ARROW, 150, 441, font_size, font_size, 287, 300);
-
-    // Make space for the different menu options and initialize them
-    menu_selections = (Selection*) malloc(numMenuOptions * sizeof(Selection));
-    menu_selections[0] = initMenuOption(TITLE, VS, 370, 300);
-    menu_selections[1] = initMenuOption(TITLE, AI, 370, 300 + font_size + 10);
-    menu_selections[2] = initMenuOption(TITLE, CONTROLS, 370, 300 + (font_size + 10) * 2);
-    menu_selections[3] = initMenuOption(STAGE_SELECT, 0, 250, 120);
-    menu_selections[4] = initMenuOption(STAGE_SELECT, 1, 250, 120 + font_size + 10);
+    // Swap out zeros for the letter O
+    for(int i = 0; i < 6; i++)
+    {
+        if(str[i] == '0') str[i] = 'O';
+    }
+    return str;
 }
 
-// Free the toolbar elements, selection options, and toolbar texture from memory
-void freeInterface()
-{
-    for(int i = 0; i < numElements; i++) free(element_list[i]);
-    free(element_list);
+/* ELEMENT RENDERING */
 
-    for(int i = 0; i < numMenuOptions; i++) free(menu_selections[i]);
-    free(menu_selections);
-
-    SDL_DestroyTexture(toolbar);
-}
-
-// Render the guys' cooldown meters (alpha blended black bars) TODO: holy shit element_list
-static void renderCooldowns(double* guy_cds, double* guy2_cds)
+// Render the guys' cooldown meters (alpha blended black bars)
+static void renderCooldowns(double* guy1_cds, double* guy2_cds)
 {
     // Starting location for cooldown meter
     Tool bar = element_list[COOLDOWN_BAR];
@@ -103,10 +118,10 @@ static void renderCooldowns(double* guy_cds, double* guy2_cds)
 
     // Render cooldown meters on each spell for each guy
     SDL_SetTextureAlphaMod(toolbar, 125);
-    for(int i = 0; guy_cds[i] >= 0; i++)
+    for(int i = 0; guy1_cds[i] >= 0; i++)
     {
         // Render cooldown meter of spell i for first Guy
-        double cooled_down = (int) (bar->width * guy_cds[i]);
+        double cooled_down = (int) (bar->width * guy1_cds[i]);
         clip.w = cooled_down;
         renderQuad.w = cooled_down;
         renderQuad.x = (int) bar->x + i * 60;
@@ -127,7 +142,7 @@ static void renderCooldowns(double* guy_cds, double* guy2_cds)
 }
 
 // Render the guys' healthbars
-static void renderHealthbars(int guy_hp, int guy2_hp)
+static void renderHealthbars(int guy1_hp, int guy2_hp)
 {
     // Render guy 1 outline
     Tool hp_bar = element_list[HEALTH_BAR];
@@ -145,8 +160,8 @@ static void renderHealthbars(int guy_hp, int guy2_hp)
 
     // Render health remaining for Guy 1
     clip.x += hp_bar->width;
-    clip.w = 25 + guy_hp * 3;
-    renderQuad.w = 25 + guy_hp * 3;
+    clip.w = 25 + guy1_hp * 3;
+    renderQuad.w = 25 + guy1_hp * 3;
     SDL_RenderCopy(renderer, toolbar, &clip, &renderQuad);
 
     // Render health remaining for Guy 2 if in VS mode
@@ -179,7 +194,7 @@ static void renderSelectionArrow(int mode, long long frame)
     double default_y = -1;
     bool match = false;
     Tool arrow = element_list[ARROW];
-    for(int i = numMenuOptions - 1; i >= 0; i--) {
+    for(int i = NUM_MENU_OPTIONS - 1; i >= 0; i--) {
         Selection op = menu_selections[i];
         if(op->mode_in == mode)
         {
@@ -211,7 +226,7 @@ static void renderText(const char* text, int x, int y, int align, int fade)
     // Set initial cursor position based on text align type
     int len = (int) strlen(text);
     int cursor = x;
-    if(align == C) cursor = x - (len * font_size / 2);
+    if(align == C) cursor = x - (len * FONT_SIZE / 2);
 
     // Iterate over string
     SDL_SetTextureAlphaMod(toolbar, fade);
@@ -224,49 +239,34 @@ static void renderText(const char* text, int x, int y, int align, int fade)
         c -= 65;
 
         // Convert char value to texture clip
-        int clipx = font_size * (c % 10);
-        int clipy = 351 + font_size * (c / 10);
+        int clipx = FONT_SIZE * (c % 10);
+        int clipy = 351 + FONT_SIZE * (c / 10);
 
         // Render character and move cursor
-        SDL_Rect clip = {clipx, clipy, font_size, font_size};
-        SDL_Rect renderQuad = {cursor, y, font_size, font_size};
+        SDL_Rect clip = {clipx, clipy, FONT_SIZE, FONT_SIZE};
+        SDL_Rect renderQuad = {cursor, y, FONT_SIZE, FONT_SIZE};
         SDL_RenderCopy(renderer, toolbar, &clip, &renderQuad);
-        cursor += font_size;
+        cursor += FONT_SIZE;
     }
     SDL_SetTextureAlphaMod(toolbar, 255);
 }
 
-// Convert an integer score into a string readable by renderText
-static char* stringScore(int score)
-{
-    // Copy number into buffer
-    char* str = (char*) malloc(sizeof(char) * 7);
-    sprintf(str, "%06d", score);
-
-    // Swap out zeros for the letter O
-    for(int i = 0; i < 6; i++)
-    {
-        if(str[i] == '0') str[i] = 'O';
-    }
-    return str;
-}
+/* PER FRAME UPDATE */
 
 // Render all of the current mode's toolbar and text elements to the screen
-void renderInterface(int mode, long long frame, int guy_hp, int guy2_hp, double* guy_cds, double* guy2_cds, int score)
+void renderInterface(int mode, long long frame, int guy1_hp, int guy2_hp, double* guy1_cds, double* guy2_cds)
 {
-    int no_fade = 255;
-    int mid     = SCREEN_WIDTH/2;
-    int y_mid   = SCREEN_HEIGHT/2 - 100;
-    int margin  = font_size + 10;
-
+    int alpha_max = 255;
+    int x = SCREEN_WIDTH / 2;
+    int margin = FONT_SIZE + 10;
     switch(mode)
     {
         case OPENING:
         {
             int y = 120;
-            renderText("ONCE UPON A TIME",    mid, y,       C, fmin(no_fade, (double)(frame)/100*255));
-            renderText("THERE WERE TWO GUYS", mid, y + 100, C, fmin(no_fade, (double)fmax(frame-100, 0)/100*255));
-            renderText("AND THEY BATTLED",    mid, y + 200, C, fmin(no_fade, (double)fmax(frame-225, 0)/100*255));
+            renderText("ONCE UPON A TIME",    x, y,       C, fmin(alpha_max, (double)(frame)/100*255));
+            renderText("THERE WERE TWO GUYS", x, y + 100, C, fmin(alpha_max, (double)fmax(frame-100, 0)/100*255));
+            renderText("AND THEY BATTLED",    x, y + 200, C, fmin(alpha_max, (double)fmax(frame-225, 0)/100*255));
             break;
         }
 
@@ -275,26 +275,25 @@ void renderInterface(int mode, long long frame, int guy_hp, int guy2_hp, double*
             int y = 300;
             renderLogo(frame);
             renderSelectionArrow(mode, frame);
-            renderText("2 PLAYER",     mid, y,                      C, no_fade);
-            renderText("1 PLAYER",     mid, y + margin,             C, no_fade);
-            renderText("CONTROLS",     mid, y + margin * 2,         C, no_fade);
-            renderText("MAX LEVATICH", 10,  SCREEN_HEIGHT - margin, L, no_fade);
+            renderText("2 PLAYER",     x,  y,                      C, alpha_max);
+            renderText("1 PLAYER",     x,  y + margin,             C, alpha_max);
+            renderText("CONTROLS",     x,  y + margin * 2,         C, alpha_max);
+            renderText("MAX LEVATICH", 10, SCREEN_HEIGHT - margin, L, alpha_max);
             break;
         }
 
         case CONTROLS:
         {
             int y = 40;
-            renderText("2 PLAYER",              mid, y,              C, no_fade);
-            renderText("X V D       P1 MOVE  ", mid, y + margin * 1, C, no_fade);
-            renderText("1 2 3 4 5   P1 SPELLS", mid, y + margin * 2, C, no_fade);
-            renderText("ARROW KEYS  P2 MOVE  ", mid, y + margin * 3, C, no_fade);
-            renderText("Y U I O P   P2 SPELLS", mid, y + margin * 4, C, no_fade);
-            y += 40;
-            renderText("1 PLAYER",              mid, y + margin * 5, C, no_fade);
-            renderText("ARROW KEYS     MOVE  ", mid, y + margin * 6, C, no_fade);
-            renderText("1 2 3 4 5      SPELLS", mid, y + margin * 7, C, no_fade);
-            renderText("ESC            PAUSE ", mid, y + margin * 8, C, no_fade);
+            renderText("2 PLAYER",              x, y,              C, alpha_max);
+            renderText("X V D       P1 MOVE  ", x, y + margin * 1, C, alpha_max);
+            renderText("1 2 3 4 5   P1 SPELLS", x, y + margin * 2, C, alpha_max);
+            renderText("ARROW KEYS  P2 MOVE  ", x, y + margin * 3, C, alpha_max);
+            renderText("Y U I O P   P2 SPELLS", x, y + margin * 4, C, alpha_max);
+            renderText("1 PLAYER",              x, y + margin * 6, C, alpha_max);
+            renderText("ARROW KEYS     MOVE  ", x, y + margin * 7, C, alpha_max);
+            renderText("1 2 3 4 5      SPELLS", x, y + margin * 8, C, alpha_max);
+            renderText("ESC            PAUSE ", x, y + margin * 9, C, alpha_max);
             break;
         }
 
@@ -302,15 +301,15 @@ void renderInterface(int mode, long long frame, int guy_hp, int guy2_hp, double*
         {
             int y = 120;
             renderSelectionArrow(mode, frame);
-            renderText("CULTIST CLEARING", mid, y,          C, no_fade);
-            renderText("PHOENIX MOUNTAIN", mid, y + margin, C, no_fade);
+            renderText("CULTIST CLEARING", x, y,          C, alpha_max);
+            renderText("PHOENIX MOUNTAIN", x, y + margin, C, alpha_max);
             break;
         }
 
         case VS:
         {
-            renderHealthbars(guy_hp, guy2_hp);
-            renderCooldowns(guy_cds, guy2_cds);
+            renderHealthbars(guy1_hp, guy2_hp);
+            renderCooldowns(guy1_cds, guy2_cds);
             break;
         }
 
@@ -318,10 +317,10 @@ void renderInterface(int mode, long long frame, int guy_hp, int guy2_hp, double*
         {
             int y = 25;
             char* score_string = stringScore(score);
-            renderHealthbars(guy_hp, -1);
-            renderCooldowns(guy_cds, NULL);
-            renderText("SCORE",      600, y, L, no_fade);
-            renderText(score_string, 780, y, L, no_fade);
+            renderHealthbars(guy1_hp, -1);
+            renderCooldowns(guy1_cds, NULL);
+            renderText("SCORE",      600, y, L, alpha_max);
+            renderText(score_string, 780, y, L, alpha_max);
             free(score_string);
             break;
         }
@@ -330,64 +329,81 @@ void renderInterface(int mode, long long frame, int guy_hp, int guy2_hp, double*
         {
             int y = 25;
             char* score_string = stringScore(score);
-            renderHealthbars(guy_hp, -1);
-            renderCooldowns(guy_cds, NULL);
-            renderText("PAUSED",     mid, y_mid, C, no_fade);
-            renderText("SCORE",      600, y,     L, no_fade);
-            renderText(score_string, 780, y,     L, no_fade);
+            renderHealthbars(guy1_hp, -1);
+            renderCooldowns(guy1_cds, NULL);
+            renderText("PAUSED",     x,   280, C, alpha_max);
+            renderText("SCORE",      600, y,   L, alpha_max);
+            renderText(score_string, 780, y,   L, alpha_max);
             free(score_string);
             break;
         }
 
         case GAME_OVER:
         {
-            renderText("GAME OVER", mid, y_mid, C, no_fade);
+            renderText("GAME OVER", x, 280, C, alpha_max);
             break;
         }
     }
-
-    free(guy_cds);
+    free(guy1_cds);
     free(guy2_cds);
 }
 
-// Move the text selection arrow
-int hover(char mode, int direction)
+/* DATA ALLOCATION / INITIALIZATION */
+
+// Assign toolbar element fields
+static Tool initTool(char id, short sheet_x, short sheet_y, short width, short height, double x, double y)
 {
-    double current_y = element_list[ARROW]->y;
-    double best_y = 999; int ret_val   = 0;
-    double best_x = 0;   int self_ret  = 0;
+    Tool this_tool = (Tool) malloc(sizeof(struct toolbar_element));
+    this_tool->id = id;
+    this_tool->sheet_pos_x = sheet_x;   this_tool->sheet_pos_y = sheet_y;
+    this_tool->width = width;           this_tool->height = height;
+    this_tool->x = x;                   this_tool->y = y;
+    return this_tool;
+}
 
-    // From the menu options active in this mode, pick the closest in the direction we're moving
-    for(int i = 0; i < numMenuOptions; i++)
-    {
-        Selection op = menu_selections[i];
-        if(op->mode_in == mode)
-        {
-            if(op->y == current_y)
-            {
-                self_ret = op->return_val;
-            }
-            else if(direction == UP && op->y < current_y && fabs(op->y - current_y) < fabs(best_y - current_y))
-            {
-                best_y = op->y;
-                best_x = op->x;
-                ret_val = op->return_val;
-            }
-            else if(direction == DOWN && op->y > current_y && fabs(op->y - current_y) < fabs(best_y - current_y))
-            {
-                best_y = op->y;
-                best_x = op->x;
-                ret_val = op->return_val;
-            }
-        }
-    }
+// Assign menu option fields
+static Selection initMenuOption(char mode_in, char mode_out, double x, double y)
+{
+    Selection this_option = (Selection) malloc(sizeof(struct select_arrow_spot));
+    this_option->x = x;
+    this_option->y = y;
+    this_option->mode_in = mode_in;
+    this_option->mode_out = mode_out;
+    return this_option;
+}
 
-    // If we didn't find anything (there were no further options in the direction we moved),
-    // stick with the current spot
-    if(best_y == 999) return self_ret;
+// Load the toolbar texture, toolbar elements, and selection text into memory
+void loadInterface()
+{
+    // Load the texture containing all toolbar elements and the alphabet
+    toolbar = loadTexture("art/Toolbar.bmp");
 
-    // Otherwise, switch to the new spot
-    element_list[ARROW]->x = best_x;
-    element_list[ARROW]->y = best_y;
-    return ret_val;
+    // Make space for the toolbar elements and initialize them
+    element_list = (Tool*) malloc(NUM_ELEMENTS * sizeof(Tool));
+    element_list[COOLDOWN_BAR] = initTool(COOLDOWN_BAR, 700, 0, 39, 39, 86, 64);
+    element_list[HEALTH_BAR] = initTool(HEALTH_BAR, 0, 0, 350, 80, 50, 25);
+    element_list[LOGO] = initTool(LOGO, 0, 100, 520, 225, 258, 50);
+    element_list[ARROW] = initTool(ARROW, 150, 441, FONT_SIZE, FONT_SIZE, 287, 300);
+
+    // Make space for the different menu options and initialize them
+    menu_selections = (Selection*) malloc(NUM_MENU_OPTIONS * sizeof(Selection));
+    menu_selections[0] = initMenuOption(TITLE, VS, 370, 300);
+    menu_selections[1] = initMenuOption(TITLE, AI, 370, 300 + FONT_SIZE + 10);
+    menu_selections[2] = initMenuOption(TITLE, CONTROLS, 370, 300 + (FONT_SIZE + 10) * 2);
+    menu_selections[3] = initMenuOption(STAGE_SELECT, 0, 250, 120);
+    menu_selections[4] = initMenuOption(STAGE_SELECT, 1, 250, 120 + FONT_SIZE + 10);
+}
+
+/* DATA UNLOADING */
+
+// Free the toolbar elements, selection options, and toolbar texture from memory
+void freeInterface()
+{
+    for(int i = 0; i < NUM_ELEMENTS; i++) free(element_list[i]);
+    free(element_list);
+
+    for(int i = 0; i < NUM_MENU_OPTIONS; i++) free(menu_selections[i]);
+    free(menu_selections);
+
+    SDL_DestroyTexture(toolbar);
 }
