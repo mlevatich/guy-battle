@@ -5,30 +5,30 @@
 typedef struct background
 {
     // Meta info about the background
-    SDL_Texture* image;
-    int width;
-    int height;
-    int x_init;
-    int y_init;
-    double xv_init;
-    double yv_init;
-    char drift_type;
+    SDL_Texture* image;         // texture for this background
+    int width;                  // image width in pixels
+    int height;                 // image height in pixels
+    int x_init;                 // initial x rendering position
+    int y_init;                 // initial y rendering position
+    double xv_init;             // initial x velocity
+    double yv_init;             // initial y velocity
+    char drift_type;            // how does this background move (SCROLL, DRIFT)
 
     // State info about the background
-    double x;
-    double y;
-    double x_vel;
-    double y_vel;
+    double x;                   // current x position
+    double y;                   // current y position
+    double x_vel;               // current x velocity
+    double y_vel;               // current y velocity
 
 }* Background;
 
 // Struct for foreground information
 typedef struct foreground
 {
-    SDL_Texture* image;
-    int* platforms;
-    int* walls;
-    int* starting_positions;
+    SDL_Texture* image;         // texture for this foreground
+    int* platforms;             // { pf1_y, pf1_x1, pf1_x2, pf2_y, ... } pf1 is the ground by convention
+    int* walls;                 // { wall1_x, wall1_y1, wall1_y2, wall2_x, ... }
+    int* starting_positions;    // { guy1_x, guy1_y, guy2_x, guy2_y }
 }* Foreground;
 
 // Types of background behavior

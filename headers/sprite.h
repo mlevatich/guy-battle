@@ -22,7 +22,7 @@ enum types
 typedef struct sprite* Sprite;
 
 // Spawn (construct) a sprite with the given fields
-Sprite spawnSprite(char id, char hp, double x, double y, double x_vel, double y_vel, int act, int dir, int angle);
+Sprite spawnSprite(char id, double x, double y, double x_vel, double y_vel, int act, int dir, int angle);
 
 // Teleport a sprite to a different location
 void setPosition(Sprite sp, double x, double y);
@@ -51,8 +51,11 @@ bool cast(Sprite guy, int spell);
 // Check if its time to spawn new spells, and spawn them, returning the change in score
 void launchSpells(void);
 
-// Check for and handle collisions for all active sprites
-void checkCollisions(int* platforms, int* walls);
+// Check for and handle terrain collisions for all active sprites
+void terrainCollisions(int* platforms, int* walls);
+
+// Check for and handle collisions between all active sprites
+void spriteCollisions();
 
 // Update the animation frame which is drawn for all active sprites
 void updateAnimationFrames(void);

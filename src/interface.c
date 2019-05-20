@@ -4,22 +4,22 @@
 // Struct for a toolbar element
 typedef struct toolbar_element
 {
-    char id;
-    short sheet_pos_x;
-    short sheet_pos_y;
-    short width;
-    short height;
-    double x;
-    double y;
+    char id;            // which toolbar element is this (LOGO, HEALTH_BAR, etc)
+    short sheet_pos_x;  // x location on the sprite sheet
+    short sheet_pos_y;  // y location on the sprite sheet
+    short width;        // width in pixels
+    short height;       // height in pixels
+    double x;           // x position to render to
+    double y;           // y position to render to
 }* Tool;
 
 // Struct for selectable menu option
-typedef struct select_arrow_spot
+typedef struct menu_selection
 {
-    double x;
-    double y;
-    char mode_in;
-    char mode_out;
+    double x;           // x position to render to
+    double y;           // y position to render to
+    char mode_in;       // mode this option appears in
+    char mode_out;      // mode this option redirects to
 }* Selection;
 
 // List of toolbar elements
@@ -364,7 +364,7 @@ static Tool initTool(char id, short sheet_x, short sheet_y, short width, short h
 // Assign menu option fields
 static Selection initMenuOption(char mode_in, char mode_out, double x, double y)
 {
-    Selection this_option = (Selection) malloc(sizeof(struct select_arrow_spot));
+    Selection this_option = (Selection) malloc(sizeof(struct menu_selection));
     this_option->x = x;
     this_option->y = y;
     this_option->mode_in = mode_in;

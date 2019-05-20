@@ -130,9 +130,9 @@ int main(int argc, char* args[])
         // Some events occur at specific points in the opening scene
         // End opening and give control to the player after 375 frames
         int* starts = getStartingPositions(getLevel());
-        // if(frame == 10) Mix_PlayMusic(main_theme, -1);
-        if(frame == 100) guy1 = spawnSprite(GUY, 100, starts[0], starts[1]-300, 0, 0, JUMP, RIGHT, 0);
-        if(frame == 225) guy2 = spawnSprite(GUY, 100, starts[2], starts[3]-300, 0, 0, JUMP, LEFT, 0);
+        if(frame == 10) Mix_PlayMusic(main_theme, -1);
+        if(frame == 100) guy1 = spawnSprite(GUY, starts[0], starts[1]-300, 0, 0, JUMP, RIGHT, 0);
+        if(frame == 225) guy2 = spawnSprite(GUY, starts[2], starts[3]-300, 0, 0, JUMP, LEFT, 0);
         if(frame == 375) mode = TITLE;
 
         // Process any SDL events that have happened since last frame
@@ -266,8 +266,9 @@ int main(int argc, char* args[])
             // Update positions, velocities, and orientations of all sprites
             moveSprites();
 
-            // Check for and handle collisions
-            checkCollisions(getPlatforms(), getWalls());
+            // Check for and handle collisions with terrain or other sprites
+            terrainCollisions(getPlatforms(), getWalls());
+            spriteCollisions();
 
             // Spawn any new spells that people are casting
             launchSpells();
