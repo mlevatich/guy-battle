@@ -22,7 +22,7 @@ enum types
 typedef struct sprite* Sprite;
 
 // Spawn (construct) a sprite with the given fields
-Sprite spawnSprite(char id, double x, double y, double x_vel, double y_vel, int act, int dir, int angle);
+Sprite spawnSprite(char id, double x, double y, double x_vel, double y_vel, int act, bool dir, int angle);
 
 // Teleport a sprite to a different location
 void setPosition(Sprite sp, double x, double y);
@@ -40,7 +40,7 @@ int getHealth(Sprite guy);
 double* getCooldowns(Sprite guy);
 
 // Attempt to walk in a direction after a keyboard input
-bool walk(Sprite guy, int direction);
+bool walk(Sprite guy, bool direction);
 
 // Attempt to jump after a keyboard input
 bool jump(Sprite guy);
