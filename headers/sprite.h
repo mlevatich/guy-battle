@@ -12,7 +12,7 @@ enum identities
 
 // Possible action states for a sprite
 enum action_types
-{ SPAWN, MOVE, COLLIDE, IDLE, JUMP, CAST_FIREBALL, CAST_ICESHOCK };
+{ SPAWN, MOVE, COLLIDE, IDLE, JUMP, CAST_FIREBALL, CAST_ICESHOCK, DIE };
 
 // Sprite types
 enum types

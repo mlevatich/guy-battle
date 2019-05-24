@@ -565,7 +565,8 @@ void terrainCollisions(int* platforms, int* walls)
 // Update which animation action the sprite is currently in based on its state
 static void updateAction(Sprite sp)
 {
-    if(sp->spawning)                                        setAction(sp, SPAWN);
+    if(sp->meta->type == HUMANOID && sp->hp == 0)           setAction(sp, DIE);
+    else if(sp->spawning)                                   setAction(sp, SPAWN);
     else if(sp->colliding)                                  setAction(sp, COLLIDE);
     else if(sp->casting)                                    setAction(sp, spell_info[(int)sp->spell]->action);
     else if(sp->x_vel == 0 && sp->y_vel == 0)               setAction(sp, IDLE);
@@ -582,7 +583,7 @@ static void updateAnimationFrame(Sprite sp)
     // Sprite proceeds through animation frames faster during certain actions
     double increment = ANIMATION_SPEED * 0.1;
     if(sp->action == JUMP || sp->action == COLLIDE) increment *= 1.5;
-    if(sp->action == CAST_FIREBALL || sp->action == CAST_ICESHOCK) increment *= 2.5;
+    if(sp->action == CAST_FIREBALL || sp->action == CAST_ICESHOCK || sp->action == DIE) increment *= 2.5;
     sp->frame += increment;
 
     // If the sprite's action has just changed, reset to first animation frame of that action
@@ -858,7 +859,7 @@ void loadSpriteInfo()
 
     // Frame sections, bounding boxes, and other metadata for Guy sprite
     char* fs4 = (char*) malloc(sizeof(char) * 7);
-    memcpy(fs4, (char[]) {0, 0, 4, 5, 10, 14, 22, 30}, 8);
+    memcpy(fs4, (char[]) {0, 0, 4, 5, 10, 14, 22, 30, 35}, 9);
 
     SDL_Rect* bounds4 = malloc(sizeof(SDL_Rect) * 2);
     bounds4[0] = (SDL_Rect) {9, 6, 15, 14};
