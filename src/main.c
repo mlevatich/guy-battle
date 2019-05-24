@@ -76,23 +76,22 @@ SDL_Texture* loadTexture(const char* path)
 }
 
 // Helper function to set the level and teleport guys
-void setLevel(Sprite guy1, Sprite guy2, int level, int mode)
+void setLevel(int level, int mode)
 {
     switchLevel(level);
     int* starts = getStartingPositions(level);
-    setPosition(guy1,  starts[0], starts[1]);
-    if(mode != AI) setPosition(guy2, starts[2], starts[3]);
+    resetGuy(0, starts[0], starts[1]);
+    if(mode != AI) resetGuy(1, starts[2], starts[3]);
 }
 
 // Helper function to reset the game to title screen
-void resetGame(Sprite guy1, Sprite guy2, int* mode, int* selection, int* vs_or_ai)
+void resetGame(int* mode, int* selection, int* vs_or_ai)
 {
     *mode = TITLE;
     *selection = VS;
     *vs_or_ai = VS;
     setScore(0);
-    setLevel(guy1, guy2, FOREST, TITLE);
-    resetGuys(guy1, guy2);
+    setLevel(FOREST, TITLE);
 }
 
 int main(int argc, char* args[])
@@ -115,16 +114,12 @@ int main(int argc, char* args[])
     // Track how many frames have passed since the game started
     long long frame = 0;
 
-    // Maintain references to the two player sprites
-    Sprite guy1 = NULL;
-    Sprite guy2 = NULL;
-
     // In debug mode, spawn the guys immediately
     if(DEBUG_MODE)
     {
         int* starts = getStartingPositions(getLevel());
-        guy1 = spawnSprite(GUY, starts[0], starts[1], 0, 0, JUMP, RIGHT, 0, 0);
-        guy2 = spawnSprite(GUY, starts[2], starts[3], 0, 0, JUMP, LEFT, 0, 0);
+        spawnSprite(GUY, starts[0], starts[1], 0, 0, JUMP, RIGHT, 0, 0);
+        spawnSprite(GUY, starts[2], starts[3], 0, 0, JUMP, LEFT, 0, 0);
         mode = TITLE;
     }
 
@@ -142,8 +137,8 @@ int main(int argc, char* args[])
         {
             int* starts = getStartingPositions(getLevel());
             if(frame == 10) Mix_PlayMusic(main_theme, -1);
-            if(frame == 100) guy1 = spawnSprite(GUY, starts[0], starts[1]-300, 0, 0, JUMP, RIGHT, 0, 0);
-            if(frame == 225) guy2 = spawnSprite(GUY, starts[2], starts[3]-300, 0, 0, JUMP, LEFT, 0, 0);
+            if(frame == 100) spawnSprite(GUY, starts[0], starts[1]-300, 0, 0, JUMP, RIGHT, 0, 0);
+            if(frame == 225) spawnSprite(GUY, starts[2], starts[3]-300, 0, 0, JUMP, LEFT, 0, 0);
             if(frame == 375) mode = TITLE;
         }
 
@@ -171,7 +166,7 @@ int main(int argc, char* args[])
                             {
                                 mode = STAGE_SELECT;
                                 vs_or_ai = selection;
-                                if(selection == AI) hideGuy(guy2);
+                                if(selection == AI) hideGuy(1);
                             }
                         }
                         else if(key == SDLK_UP)
@@ -192,17 +187,17 @@ int main(int argc, char* args[])
                         }
                         else if(key == SDLK_ESCAPE)
                         {
-                            resetGame(guy1, guy2, &mode, &selection, &vs_or_ai);
+                            resetGame(&mode, &selection, &vs_or_ai);
                         }
                         else if(key == SDLK_UP)
                         {
                             selection = hover(mode, UP);
-                            if(getLevel() != selection) setLevel(guy1, guy2, FOREST, vs_or_ai);
+                            if(getLevel() != selection) setLevel(FOREST, vs_or_ai);
                         }
                         else if(key == SDLK_DOWN)
                         {
                             selection = hover(mode, DOWN);
-                            if(getLevel() != selection) setLevel(guy1, guy2, VOLCANO, vs_or_ai);
+                            if(getLevel() != selection) setLevel(VOLCANO, vs_or_ai);
                         }
                         break;
 
@@ -223,10 +218,7 @@ int main(int argc, char* args[])
 
                     case GAME_OVER:
                         // Hit esc or enter to return to the title screen
-                        if(key == SDLK_ESCAPE || key == SDLK_RETURN)
-                        {
-                            resetGame(guy1, guy2, &mode, &selection, &vs_or_ai);
-                        }
+                        if(key == SDLK_ESCAPE || key == SDLK_RETURN) resetGame(&mode, &selection, &vs_or_ai);
                         break;
 
                     default:
@@ -240,33 +232,34 @@ int main(int argc, char* args[])
         {
             // Process key presses as actions in battle
             const Uint8* keys = SDL_GetKeyboardState(NULL);
+            bool succ = 0;
+            int guy = 0;
             if(mode == VS)
             {
-                // Input for guy 1
-                bool succ = 0;
-                if(!succ && keys[SDL_SCANCODE_2])                          succ = cast(guy1, ICESHOCK);
-                if(!succ && keys[SDL_SCANCODE_1])                          succ = cast(guy1, FIREBALL);
-                if(!succ && keys[SDL_SCANCODE_D])                          succ = jump(guy1);
-                if(!succ && keys[SDL_SCANCODE_X] && !keys[SDL_SCANCODE_V]) succ = walk(guy1, LEFT);
-                if(!succ && keys[SDL_SCANCODE_V] && !keys[SDL_SCANCODE_X]) succ = walk(guy1, RIGHT);
+                // Input for guy 0
+                if(!succ && keys[SDL_SCANCODE_2])                          succ = cast(guy, ICESHOCK);
+                if(!succ && keys[SDL_SCANCODE_1])                          succ = cast(guy, FIREBALL);
+                if(!succ && keys[SDL_SCANCODE_D])                          succ = jump(guy);
+                if(!succ && keys[SDL_SCANCODE_X] && !keys[SDL_SCANCODE_V]) succ = walk(guy, LEFT);
+                if(!succ && keys[SDL_SCANCODE_V] && !keys[SDL_SCANCODE_X]) succ = walk(guy, RIGHT);
 
-                // Input for guy 2
+                // Input for guy 1
                 succ = 0;
-                if(!succ && keys[SDL_SCANCODE_U])                                 succ = cast(guy2, ICESHOCK);
-                if(!succ && keys[SDL_SCANCODE_Y])                                 succ = cast(guy2, FIREBALL);
-                if(!succ && keys[SDL_SCANCODE_UP])                                succ = jump(guy2);
-                if(!succ && keys[SDL_SCANCODE_LEFT] && !keys[SDL_SCANCODE_RIGHT]) succ = walk(guy2, LEFT);
-                if(!succ && keys[SDL_SCANCODE_RIGHT] && !keys[SDL_SCANCODE_LEFT]) succ = walk(guy2, RIGHT);
+                guy = 1;
+                if(!succ && keys[SDL_SCANCODE_U])                                 succ = cast(guy, ICESHOCK);
+                if(!succ && keys[SDL_SCANCODE_Y])                                 succ = cast(guy, FIREBALL);
+                if(!succ && keys[SDL_SCANCODE_UP])                                succ = jump(guy);
+                if(!succ && keys[SDL_SCANCODE_LEFT] && !keys[SDL_SCANCODE_RIGHT]) succ = walk(guy, LEFT);
+                if(!succ && keys[SDL_SCANCODE_RIGHT] && !keys[SDL_SCANCODE_LEFT]) succ = walk(guy, RIGHT);
             }
             else if(mode == AI)
             {
-                // Input for guy
-                bool succ = 0;
-                if(!succ && keys[SDL_SCANCODE_2])                                 succ = cast(guy1, ICESHOCK);
-                if(!succ && keys[SDL_SCANCODE_1])                                 succ = cast(guy1, FIREBALL);
-                if(!succ && keys[SDL_SCANCODE_UP])                                succ = jump(guy1);
-                if(!succ && keys[SDL_SCANCODE_LEFT] && !keys[SDL_SCANCODE_RIGHT]) succ = walk(guy1, LEFT);
-                if(!succ && keys[SDL_SCANCODE_RIGHT] && !keys[SDL_SCANCODE_LEFT]) succ = walk(guy1, RIGHT);
+                // Input for guy 0
+                if(!succ && keys[SDL_SCANCODE_2])                                 succ = cast(guy, ICESHOCK);
+                if(!succ && keys[SDL_SCANCODE_1])                                 succ = cast(guy, FIREBALL);
+                if(!succ && keys[SDL_SCANCODE_UP])                                succ = jump(guy);
+                if(!succ && keys[SDL_SCANCODE_LEFT] && !keys[SDL_SCANCODE_RIGHT]) succ = walk(guy, LEFT);
+                if(!succ && keys[SDL_SCANCODE_RIGHT] && !keys[SDL_SCANCODE_LEFT]) succ = walk(guy, RIGHT);
             }
 
             // Process ai decisions
@@ -299,7 +292,7 @@ int main(int argc, char* args[])
         SDL_RenderClear(renderer);
         renderLevel();
         renderSprites();
-        renderInterface(mode, frame, getHealth(guy1), getHealth(guy2), getCooldowns(guy1), getCooldowns(guy2));
+        renderInterface(mode, frame, getHealth(0), getHealth(1), getCooldowns(0), getCooldowns(1));
         SDL_RenderPresent(renderer);
 
         // Cap framerate at MAX_FPS

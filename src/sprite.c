@@ -69,10 +69,12 @@ SpriteList activeSprites;   // Linked list of currently active sprites
 SpriteInfo* sprite_info;    // Array of meta info structs for sprites, indexed by identities enum (sprite.h)
 SpellInfo* spell_info;      // Array of meta info structs for spells, indexed by identities enum (sprite.h)
 
+Sprite guys[2] = {NULL, NULL};   // Permanent storage for the guy sprites
+
 /* SPRITE CONSTRUCTOR */
 
 // Initialize a sprite with its on-screen location and stats
-Sprite spawnSprite(char id, double x, double y, double xv, double yv, int act, bool dir, int angle, char spawning)
+void spawnSprite(char id, double x, double y, double xv, double yv, int act, bool dir, int angle, char spawning)
 {
     // Set sprite fields
     Sprite sp = (Sprite) malloc(sizeof(struct sprite));
@@ -97,7 +99,13 @@ Sprite spawnSprite(char id, double x, double y, double xv, double yv, int act, b
     new_sprite->next = NULL;
     if(activeSprites != NULL) new_sprite->next = activeSprites;
     activeSprites = new_sprite;
-    return sp;
+
+    // If sprite is a guy store a reference to him
+    if(sp->meta->id == GUY)
+    {
+        if(!guys[0]) guys[0] = sp;
+        else         guys[1] = sp;
+    }
 }
 
 /* SETTERS */
@@ -110,7 +118,7 @@ static void setAction(Sprite sp, int action)
 }
 
 // Teleport a sprite to a different location
-void setPosition(Sprite sp, double x, double y)
+static void setPosition(Sprite sp, double x, double y)
 {
     sp->x_pos = x;
     sp->y_pos = y;
@@ -124,30 +132,52 @@ static void stopSprite(Sprite sp)
 }
 
 // Hide a guy in the top right corner of the screen (Guys can't be despawned)
-void hideGuy(Sprite guy)
+void hideGuy(int guy)
 {
-    setPosition(guy, SCREEN_WIDTH+20, 0);
-    stopSprite(guy);
-    guy->hp = 1;
+    setPosition(guys[guy], SCREEN_WIDTH+20, 0);
+    stopSprite(guys[guy]);
+    guys[guy]->hp = 1;
 }
 
 // Reset the fields of the Guys after a match ends
-void resetGuys(Sprite guy1, Sprite guy2)
+void resetGuy(int guy, int x_pos, int y_pos)
 {
-    guy1->hp = 100;
-    guy2->hp = 100;
-    for(int i = 0; i < NUM_SPELLS; i++)
-    {
-        guy1->cooldowns[i] = 0;
-        guy2->cooldowns[i] = 0;
-    }
-    stopSprite(guy1);
-    stopSprite(guy2);
-    guy1->direction = RIGHT;
-    guy2->direction = LEFT;
+    guys[guy]->hp = 100;
+    guys[guy]->hp = 100;
+    for(int i = 0; i < NUM_SPELLS; i++) guys[guy]->cooldowns[i] = 0;
+    setPosition(guys[guy], x_pos, y_pos);
+    stopSprite(guys[guy]);
+    if(guy) guys[guy]->direction = LEFT;
+    else    guys[guy]->direction = RIGHT;
 }
 
 /* GETTERS */
+
+// Get an array of percentages of a guy's cooldowns
+double* getCooldowns(int guy)
+{
+    // Make sure the malloc'd array is still collected even if the Guy doesn't exist
+    double* cooldown_percentages = (double*) malloc(sizeof(double) * (NUM_SPELLS + 1));
+    if(!guys[guy]) return cooldown_percentages;
+
+    // Get cooldown percentages
+    for(int i = 0; i < NUM_SPELLS; i++)
+    {
+        cooldown_percentages[i] = guys[guy]->cooldowns[i] / (double) spell_info[i]->cooldown;
+    }
+
+    // Hack to denote an end of the array
+    cooldown_percentages[NUM_SPELLS] = -1;
+    return cooldown_percentages;
+}
+
+// Get a guy's health remaining
+int getHealth(int guy)
+{
+    // Make sure something is returned even if the Guy doesn't exist
+    if(!guys[guy]) return 0;
+    return guys[guy]->hp;
+}
 
 // Get the x coordinate of a sprite's center
 static double xCenter(Sprite sp)
@@ -166,32 +196,6 @@ static SDL_Rect* getBounds(Sprite sp)
 {
     if(sp->direction == RIGHT) return sp->meta->rbounds;
     return sp->meta->lbounds;
-}
-
-// Get an array of percentages of a guy's cooldowns
-double* getCooldowns(Sprite guy)
-{
-    // Make sure the malloc'd array is still collected even if the Guy doesn't exist
-    double* cooldown_percentages = (double*) malloc(sizeof(double) * (NUM_SPELLS + 1));
-    if(!guy) return cooldown_percentages;
-
-    // Get cooldown percentages
-    for(int i = 0; i < NUM_SPELLS; i++)
-    {
-        cooldown_percentages[i] = (double) guy->cooldowns[i] / (double) spell_info[i]->cooldown;
-    }
-
-    // Hack to denote an end of the array
-    cooldown_percentages[NUM_SPELLS] = -1;
-    return cooldown_percentages;
-}
-
-// Get a guy's health remaining
-int getHealth(Sprite guy)
-{
-    // Make sure something is returned even if the Guy doesn't exist
-    if(!guy) return 0;
-    return guy->hp;
 }
 
 // Return true if a sprite is touching the ground
@@ -261,46 +265,46 @@ static bool isDead(Sprite sp)
 /* SPRITE ACTIONS */
 
 // Attempt to walk in a direction after a keyboard input
-bool walk(Sprite guy, bool direction)
+bool walk(int guy, bool direction)
 {
     // Guy can only walk if he's not casting or colliding (can still move left/right in midair)
-    if(!(guy->casting || guy->colliding))
+    if(!(guys[guy]->casting || guys[guy]->colliding))
     {
         // Update velocity and direction facing based on direction of walk
         if(direction == LEFT)
         {
-            guy->x_vel = fmax(guy->x_vel - 0.4, -4.0);
+            guys[guy]->x_vel = fmax(guys[guy]->x_vel - 0.4, -4.0);
         }
         else
         {
-            guy->x_vel = fmin(guy->x_vel + 0.4, 4.0);
+            guys[guy]->x_vel = fmin(guys[guy]->x_vel + 0.4, 4.0);
         }
-        guy->direction = direction;
+        guys[guy]->direction = direction;
         return 1;
     }
     return 0;
 }
 
 // Attempt to jump after a keyboard input
-bool jump(Sprite guy)
+bool jump(int guy)
 {
     // Guy can only jump if he's not casting, colliding, or jumping
-    if(!(guy->casting || guy->colliding) && guy->action != JUMP)
+    if(!(guys[guy]->casting || guys[guy]->colliding) && guys[guy]->action != JUMP)
     {
-        guy->y_vel += -10.1;
+        guys[guy]->y_vel += -10.1;
         return 1;
     }
     return 0;
 }
 
 // Attempt to cast a spell after a keyboard input
-bool cast(Sprite guy, int spell)
+bool cast(int guy, int spell)
 {
     // Guy can only cast a spell if it's off cooldown and he's not casting, colliding, or jumping
-    if(!(guy->casting || guy->colliding) && !guy->cooldowns[spell] && guy->action != JUMP)
+    if(!(guys[guy]->casting || guys[guy]->colliding) && !guys[guy]->cooldowns[spell] && guys[guy]->action != JUMP)
     {
-        guy->casting = spell_info[spell]->cast_time;
-        guy->spell = spell;
+        guys[guy]->casting = spell_info[spell]->cast_time;
+        guys[guy]->spell = spell;
         return 1;
     }
     return 0;
@@ -895,7 +899,8 @@ bool unloadSprites()
             if(cursor->sp->meta->id == GUY)
             {
                 // If the dead sprite is a Guy, just hide it and signal game over
-                hideGuy(cursor->sp);
+                if(cursor->sp == guys[0]) hideGuy(0);
+                else                      hideGuy(1);
                 game_over = true;
             }
             else

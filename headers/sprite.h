@@ -22,31 +22,28 @@ enum types
 typedef struct sprite* Sprite;
 
 // Spawn (construct) a sprite with the given fields
-Sprite spawnSprite(char id, double x, double y, double xv, double yv, int act, bool dir, int angle, char spawning);
-
-// Teleport a sprite to a different location
-void setPosition(Sprite sp, double x, double y);
+void spawnSprite(char id, double x, double y, double xv, double yv, int act, bool dir, int angle, char spawning);
 
 // Hide a guy in the top right corner of the map
-void hideGuy(Sprite guy);
+void hideGuy(int guy);
 
-// Reset the health and cooldowns of the guys after a match ends
-void resetGuys(Sprite guy, Sprite guy2);
+// Reset the health and cooldowns and position of a guy
+void resetGuy(int guy, int x, int y);
 
 // Get a guy's health remaining
-int getHealth(Sprite guy);
+int getHealth(int guy);
 
 // Get an array of percentages of a guy's cooldowns
-double* getCooldowns(Sprite guy);
+double* getCooldowns(int guy);
 
 // Attempt to walk in a direction after a keyboard input
-bool walk(Sprite guy, bool direction);
+bool walk(int guy, bool direction);
 
 // Attempt to jump after a keyboard input
-bool jump(Sprite guy);
+bool jump(int guy);
 
 // Attempt to cast a spell after a keyboard input
-bool cast(Sprite guy, int spell);
+bool cast(int guy, int spell);
 
 // Check if its time to spawn new spells, and spawn them, returning the change in score
 void launchSpells(void);
