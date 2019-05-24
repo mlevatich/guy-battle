@@ -44,6 +44,7 @@ struct sprite
 
     // Action info
     short hp;               // current hp
+    char spawning;          // number of frames left in spawn animation
     char colliding;         // number of frames left in collision
     char casting;           // number of frames left to cast spell
     short* cooldowns;       // array of spell cooldowns
@@ -71,7 +72,7 @@ SpellInfo* spell_info;      // Array of meta info structs for spells, indexed by
 /* SPRITE CONSTRUCTOR */
 
 // Initialize a sprite with its on-screen location and stats
-Sprite spawnSprite(char id, double x, double y, double x_vel, double y_vel, int act, bool dir, int angle)
+Sprite spawnSprite(char id, double x, double y, double xv, double yv, int act, bool dir, int angle, char spawning)
 {
     // Set sprite fields
     Sprite sp = (Sprite) malloc(sizeof(struct sprite));
@@ -80,9 +81,10 @@ Sprite spawnSprite(char id, double x, double y, double x_vel, double y_vel, int 
     sp->hp = sp->meta->max_hp;
     sp->angle = angle; sp->direction = dir;
     sp->x_pos = x;     sp->y_pos = y;
-    sp->x_vel = x_vel; sp->y_vel = y_vel;
+    sp->x_vel = xv;    sp->y_vel = yv;
     sp->casting = 0;   sp->colliding = 0;
     sp->spell = 0;     sp->action = act;
+    sp->spawning = spawning;
     sp->action_change = true;
 
     // Only human sprites have cooldowns
@@ -308,11 +310,11 @@ bool cast(Sprite guy, int spell)
 static void Fireball(Sprite sp)
 {
     // Starting position and velocity of the fireball
-    double fire_x_pos = sp->x_pos + convert(sp->direction) * 50; // * 20
+    double fire_x_pos = sp->x_pos + convert(sp->direction) * 20;
     double fire_x_vel = convert(sp->direction) * 1;
 
     // Spawn the fireball and return score change
-    spawnSprite(FIREBALL, fire_x_pos, sp->y_pos+28, fire_x_vel, 0, MOVE, sp->direction, 0);
+    spawnSprite(FIREBALL, fire_x_pos, sp->y_pos+28, fire_x_vel, 0, MOVE, sp->direction, 0, 0);
 }
 
 // Action function for launching an iceshock (stored as fxn ptr in spellInfo)
@@ -325,14 +327,14 @@ static void Iceshock(Sprite sp)
         if(i == 0 || i == 3)
         {
             x_speed = 5;
-            x_dist = 45; // 15
-            y_dist = 25; // 5
+            x_dist = 15;
+            y_dist = 5;
         }
         else
         {
             x_speed = 2.5;
-            x_dist = 25; // 5
-            y_dist = 45; // 15
+            x_dist = 5;
+            y_dist = 15;
         }
 
         // Starting orientation/side-of-caster of the missile
@@ -345,14 +347,14 @@ static void Iceshock(Sprite sp)
         double ice_ypos = sp->y_pos-y_dist;
 
         // Spawn one missile and four small particles around it
-        spawnSprite(ICESHOCK, ice_xpos, ice_ypos, side * x_speed, y_speed, MOVE, direction, angle);
+        spawnSprite(ICESHOCK, ice_xpos, ice_ypos, side * x_speed, y_speed, MOVE, direction, angle, 0);
         for(int j = 0; j < 4; j++)
         {
             double ptc_x = ice_xpos + (get_rand() - 0.5) * 10;
             double ptc_y = ice_ypos + (get_rand() - 0.5) * 10;
             double ptc_xv = side * (x_speed * get_rand() + 2);
             double ptc_yv = y_speed * get_rand() - x_speed;
-            spawnSprite(ICESHOCK_PARTICLE, ptc_x, ptc_y, ptc_xv, ptc_yv, MOVE, direction, 0);
+            spawnSprite(ICESHOCK_PARTICLE, ptc_x, ptc_y, ptc_xv, ptc_yv, MOVE, direction, 0, 0);
         }
     }
 }
@@ -467,14 +469,17 @@ void spriteCollisions()
         Sprite sp = cursor->sp;
         if(sp->meta->type == PARTICLE) continue;
 
-        // Sprites that are still in their collision animation can't collide again
+        // Colliding sprites can't collide again
         if(sp->colliding) continue;
 
         // Otherwise, need to check for a collision against every other sprite
         for(struct ele* cursor = activeSprites; cursor != NULL; cursor = cursor->next)
         {
-            // Sprites don't collide with themselves
+            // Colliding sprites can't collide again
             Sprite other = cursor->sp;
+            if(other->colliding) continue;
+
+            // Sprites don't collide with themselves
             if(sp == other) continue;
 
             // Particles don't collide with other sprites
@@ -482,9 +487,6 @@ void spriteCollisions()
 
             // Humans don't collide with other humans
             if(other->meta->type == HUMANOID && sp->meta->type == HUMANOID) continue;
-
-            // Already-colliding spells don't interact with anything
-            if(other->meta->type == SPELL && other->colliding) continue;
 
             // Bounding circle check – if two sprites aren't even close to each other, don't bother
             if(!boundingCircleCheck(sp, other)) continue;
@@ -563,7 +565,8 @@ void terrainCollisions(int* platforms, int* walls)
 // Update which animation action the sprite is currently in based on its state
 static void updateAction(Sprite sp)
 {
-    if(sp->colliding)                                       setAction(sp, COLLIDE);
+    if(sp->spawning)                                        setAction(sp, SPAWN);
+    else if(sp->colliding)                                  setAction(sp, COLLIDE);
     else if(sp->casting)                                    setAction(sp, spell_info[(int)sp->spell]->action);
     else if(sp->x_vel == 0 && sp->y_vel == 0)               setAction(sp, IDLE);
     else if(sp->meta->type == HUMANOID && sp->y_vel != 0)   setAction(sp, JUMP);
@@ -669,6 +672,9 @@ static void advanceTimer(Sprite sp)
     // Update casting time
     if(sp->casting) sp->casting--;
 
+    // Update spawning animation duration
+    if(sp->spawning) sp->spawning--;
+
     // Update cooldowns
     if(sp->meta->type == HUMANOID)
     {
@@ -734,7 +740,14 @@ static void renderSprite(Sprite sp)
     SDL_Rect renderQuad = {(int)sp->x_pos, (int)sp->y_pos, sp->meta->width, sp->meta->height};
     SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, sp->angle, NULL, flipType);
 
-    if(DEBUG_MODE && sp->meta->type != PARTICLE) renderBounds(sp);
+    // In debug mode, render bounding boxes and sprite positions
+    if(DEBUG_MODE && sp->meta->type != PARTICLE)
+    {
+        renderBounds(sp);
+        clip = (SDL_Rect) {366, 67, 3, 3};
+        renderQuad = (SDL_Rect) {(int)sp->x_pos, (int)sp->y_pos, 3, 3};
+        SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
+    }
 }
 
 // Render all active sprites to the screen
@@ -778,6 +791,7 @@ static SpellInfo initSpell(char action, char cast_time, char finish_time, short 
     this_spell->cast_time = cast_time;
     this_spell->finish_time = finish_time;
     this_spell->cooldown = cooldown;
+    if(DEBUG_MODE) this_spell->cooldown = 0; // no cooldowns in debug mode
     this_spell->launch = launch_fxn;
     return this_spell;
 }
@@ -818,7 +832,7 @@ void loadSpriteInfo()
 
     // Frame sections, bounding boxes, and other metadata for Fireball sprite
     char* fs1 = (char*) malloc(sizeof(char) * 3);
-    memcpy(fs1, (char[]) {0, 2, 5}, 3);
+    memcpy(fs1, (char[]) {0, 0, 2, 5}, 4);
 
     SDL_Rect* bounds1 = malloc(sizeof(SDL_Rect) * 1);
     bounds1[0] = (SDL_Rect) {6, 2, 12, 6};
@@ -827,7 +841,7 @@ void loadSpriteInfo()
 
     // Frame sections, bounding boxes, and other metadata for Iceshock sprite
     char* fs2 = (char*) malloc(sizeof(char) * 3);
-    memcpy(fs2, (char[]) {0, 2, 5}, 3);
+    memcpy(fs2, (char[]) {0, 0, 2, 5}, 4);
 
     SDL_Rect* bounds2 = malloc(sizeof(SDL_Rect) * 1);
     bounds2[0] = (SDL_Rect) {6, 1, 13, 7};
@@ -836,7 +850,7 @@ void loadSpriteInfo()
 
     // Frame sections and other metadata for iceshock particle sprite
     char* fs3 = (char*) malloc(sizeof(char) * 3);
-    memcpy(fs3, (char[]) {0, 2, 2}, 3);
+    memcpy(fs3, (char[]) {0, 0, 2, 2}, 4);
 
     SDL_Rect* bounds3 = NULL;
 
@@ -844,7 +858,7 @@ void loadSpriteInfo()
 
     // Frame sections, bounding boxes, and other metadata for Guy sprite
     char* fs4 = (char*) malloc(sizeof(char) * 7);
-    memcpy(fs4, (char[]) {0, 4, 5, 10, 14, 22, 30}, 7);
+    memcpy(fs4, (char[]) {0, 0, 4, 5, 10, 14, 22, 30}, 8);
 
     SDL_Rect* bounds4 = malloc(sizeof(SDL_Rect) * 2);
     bounds4[0] = (SDL_Rect) {9, 6, 15, 14};

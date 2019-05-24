@@ -12,7 +12,7 @@ enum identities
 
 // Possible action states for a sprite
 enum action_types
-{ MOVE, COLLIDE, IDLE, JUMP, CAST_FIREBALL, CAST_ICESHOCK };
+{ SPAWN, MOVE, COLLIDE, IDLE, JUMP, CAST_FIREBALL, CAST_ICESHOCK };
 
 // Sprite types
 enum types
@@ -22,7 +22,7 @@ enum types
 typedef struct sprite* Sprite;
 
 // Spawn (construct) a sprite with the given fields
-Sprite spawnSprite(char id, double x, double y, double x_vel, double y_vel, int act, bool dir, int angle);
+Sprite spawnSprite(char id, double x, double y, double xv, double yv, int act, bool dir, int angle, char spawning);
 
 // Teleport a sprite to a different location
 void setPosition(Sprite sp, double x, double y);

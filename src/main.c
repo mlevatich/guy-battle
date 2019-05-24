@@ -119,6 +119,15 @@ int main(int argc, char* args[])
     Sprite guy1 = NULL;
     Sprite guy2 = NULL;
 
+    // In debug mode, spawn the guys immediately
+    if(DEBUG_MODE)
+    {
+        int* starts = getStartingPositions(getLevel());
+        guy1 = spawnSprite(GUY, starts[0], starts[1], 0, 0, JUMP, RIGHT, 0, 0);
+        guy2 = spawnSprite(GUY, starts[2], starts[3], 0, 0, JUMP, LEFT, 0, 0);
+        mode = TITLE;
+    }
+
     // Game loop
     bool quit = false;
     SDL_Event e;
@@ -129,11 +138,14 @@ int main(int argc, char* args[])
 
         // Some events occur at specific points in the opening scene
         // End opening and give control to the player after 375 frames
-        int* starts = getStartingPositions(getLevel());
-        if(frame == 10) Mix_PlayMusic(main_theme, -1);
-        if(frame == 100) guy1 = spawnSprite(GUY, starts[0], starts[1]-300, 0, 0, JUMP, RIGHT, 0);
-        if(frame == 225) guy2 = spawnSprite(GUY, starts[2], starts[3]-300, 0, 0, JUMP, LEFT, 0);
-        if(frame == 375) mode = TITLE;
+        if(mode == OPENING && !DEBUG_MODE)
+        {
+            int* starts = getStartingPositions(getLevel());
+            if(frame == 10) Mix_PlayMusic(main_theme, -1);
+            if(frame == 100) guy1 = spawnSprite(GUY, starts[0], starts[1]-300, 0, 0, JUMP, RIGHT, 0, 0);
+            if(frame == 225) guy2 = spawnSprite(GUY, starts[2], starts[3]-300, 0, 0, JUMP, LEFT, 0, 0);
+            if(frame == 375) mode = TITLE;
+        }
 
         // Process any SDL events that have happened since last frame
         while(SDL_PollEvent(&e) != 0)
@@ -292,6 +304,7 @@ int main(int argc, char* args[])
 
         // Cap framerate at MAX_FPS
         double ms_per_frame = 1000.0 / MAX_FPS;
+        if(DEBUG_MODE) ms_per_frame *= 3;
         int sleep_time = ms_per_frame - (SDL_GetTicks() - start_time);
         if(sleep_time > 0) SDL_Delay(sleep_time);
         frame++;

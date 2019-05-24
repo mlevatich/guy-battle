@@ -9,8 +9,9 @@
 #include <stdbool.h>
 #include <math.h>
 
-// Debug
-#define DEBUG_MODE 0
+// Debug mode - in debug mode, the framerate is lowered, the opening scene is skipped,
+// there are no cooldowns, and sprite coordinates and bounding boxes are rendered on them.
+#define DEBUG_MODE false
 
 // Screen size
 #define SCREEN_WIDTH 1024
