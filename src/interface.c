@@ -4,22 +4,22 @@
 // Struct for a toolbar element
 typedef struct toolbar_element
 {
-    char id;            // which toolbar element is this (LOGO, HEALTH_BAR, etc)
-    short sheet_pos_x;  // x location on the sprite sheet
-    short sheet_pos_y;  // y location on the sprite sheet
-    short width;        // width in pixels
-    short height;       // height in pixels
-    double x;           // x position to render to
-    double y;           // y position to render to
+    int id;            // which toolbar element is this (LOGO, HEALTH_BAR, etc)
+    int sheet_pos_x;   // x location on the sprite sheet
+    int sheet_pos_y;   // y location on the sprite sheet
+    int width;         // width in pixels
+    int height;        // height in pixels
+    double x;          // x position to render to
+    double y;          // y position to render to
 }* Tool;
 
 // Struct for selectable menu option
 typedef struct menu_selection
 {
-    double x;           // x position to render to
-    double y;           // y position to render to
-    char mode_in;       // mode this option appears in
-    char mode_out;      // mode this option redirects to
+    double x;          // x position to render to
+    double y;          // y position to render to
+    int mode_in;       // mode this option appears in
+    int mode_out;      // mode this option redirects to
 }* Selection;
 
 // List of toolbar elements
@@ -42,7 +42,7 @@ int score = 0;              // The score, for 1-player games
 /* SETTERS */
 
 // Move the text selection arrow
-int hover(char mode, int direction)
+int hover(int mode, int direction)
 {
     double current_y = element_list[ARROW]->y;
     double best_y = 999; int ret_val   = 0;
@@ -351,7 +351,7 @@ void renderInterface(int mode, long long frame, int guy1_hp, int guy2_hp, double
 /* DATA ALLOCATION / INITIALIZATION */
 
 // Assign toolbar element fields
-static Tool initTool(char id, short sheet_x, short sheet_y, short width, short height, double x, double y)
+static Tool initTool(int id, int sheet_x, int sheet_y, int width, int height, double x, double y)
 {
     Tool this_tool = (Tool) malloc(sizeof(struct toolbar_element));
     this_tool->id = id;
@@ -362,7 +362,7 @@ static Tool initTool(char id, short sheet_x, short sheet_y, short width, short h
 }
 
 // Assign menu option fields
-static Selection initMenuOption(char mode_in, char mode_out, double x, double y)
+static Selection initMenuOption(int mode_in, int mode_out, double x, double y)
 {
     Selection this_option = (Selection) malloc(sizeof(struct menu_selection));
     this_option->x = x;

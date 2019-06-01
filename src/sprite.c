@@ -4,94 +4,93 @@
 // Struct for sprite meta information
 typedef struct sprite_metainfo
 {
-    short width;            // width in pixels
-    short height;           // height in pixels
-    short radius;           // radius in pixels, for collision checking
-    short num_bounds;       // number of bounding boxes
-    SDL_Rect* rbounds;      // arrays of bounding boxes (one for each direction), for collision checking
-    SDL_Rect* lbounds;      // with origin in the upper-left, given relative to the sprite's xy-position
-    short sheet_position;   // y-position of sprite on the sprite sheet
-    char* frame_sections;   // array containing the number of animation frames for each sprite action
-    short power;            // how much damage this sprite does in a collision
-    short max_hp;           // the maximum hp of the sprite
-    char type;              // what kind of sprite is this (HUMANOID, SPELL, PARTICLE)
-    char id;                // what sprite is this (FIREBALL, GUY, etc)
+    int width;                  // width in pixels
+    int height;                 // height in pixels
+    int radius;                 // radius in pixels, for collision checking
+    int num_bounds;             // number of bounding boxes
+    SDL_Rect* rbounds;          // arrays of bounding boxes (one for each direction), for collision checking
+    SDL_Rect* lbounds;          // with origin in the upper-left, given relative to the sprite's xy-position
+    int sheet_position;         // y-position of sprite on the sprite sheet
+    int* frame_sections;        // array containing the number of animation frames for each sprite action
+    int power;                  // how much damage this sprite does in a collision
+    int max_hp;                 // the maximum hp of the sprite
+    int type;                   // what kind of sprite is this (HUMANOID, SPELL, PARTICLE)
+    int id;                     // what sprite is this (FIREBALL, GUY, etc)
 }* SpriteInfo;
 
 // Struct for spell meta information
 typedef struct spell_metainfo
 {
-    char action;            // what is the casting animation for this spell
-    char cast_time;         // how long does it take to cast this spell
-    char finish_time;       // at what point in the casting animation is the spell launched
-    short cooldown;         // how many frames before the spell is available again
-    void (*launch)(Sprite); // function that's called when the spell is launched
+    int action;                 // what is the casting animation for this spell
+    int cast_time;              // how long does it take to cast this spell
+    int finish_time;            // at what point in the casting animation is the spell launched
+    int cooldown;               // how many frames before the spell is available again
+    void (*on_launch)(Sprite);  // function that's called when the spell is launched
+    void (*on_collide)(Sprite); // function that's called when the spell collides
 }* SpellInfo;
 
 // Struct for a currently active sprite
 struct sprite
 {
     // Meta info
-    SpriteInfo meta;        // meta info for this sprite (see above)
+    SpriteInfo meta;            // meta info for this sprite (see above)
 
     // Positional info
-    double x_pos;           // in-game x-coord
-    double y_pos;           // in-game y-coord
-    double x_vel;           // x-velocity
-    double y_vel;           // y-velocity
-    bool direction;         // direction currently facing
-    short angle;            // angle of orientation
+    double x_pos;               // in-game x-coord
+    double y_pos;               // in-game y-coord
+    double x_vel;               // x-velocity
+    double y_vel;               // y-velocity
+    bool direction;             // direction currently facing
+    int angle;                  // angle of orientation
 
     // Action info
-    short hp;               // current hp
-    char spawning;          // number of frames left in spawn animation
-    char colliding;         // number of frames left in collision
-    char casting;           // number of frames left to cast spell
-    short* cooldowns;       // array of spell cooldowns
-    char spell;             // spell currently in use
-    char action;            // which animation is the sprite in (MOVE, JUMP, etc)
-    bool action_change;     // has sprite's action changed to a different one this frame
-    double frame;           // which animation frame should be rendered on the sprite sheet
+    int hp;                     // current hp
+    int spawning;               // number of frames left in spawn animation
+    int colliding;              // number of frames left in collision
+    int casting;                // number of frames left to cast spell
+    int* cooldowns;             // array of spell cooldowns
+    int spell;                  // spell currently in use
+    int action;                 // which animation is the sprite in (MOVE, JUMP, etc)
+    bool action_change;         // has sprite's action changed to a different one this frame
+    double frame;               // which animation frame should be rendered on the sprite sheet
 };
 
 // Struct for a linked list of sprites
 typedef struct ele
 {
-    Sprite sp;              // sprite at this node
-    struct ele* next;       // next node
+    Sprite sp;                  // sprite at this node
+    struct ele* next;           // next node
 }* SpriteList;
 
-#define NUM_SPRITES 4       // Number of distinct sprites in the game
-#define NUM_SPELLS 2        // Number of distinct spells in the game
+#define NUM_SPRITES 7           // Number of distinct sprites in the game
+#define NUM_SPELLS 3            // Number of distinct spells in the game
 
-SDL_Texture* spriteSheet;   // Texture containing all sprites
-SpriteList activeSprites;   // Linked list of currently active sprites
-SpriteInfo* sprite_info;    // Array of meta info structs for sprites, indexed by identities enum (sprite.h)
-SpellInfo* spell_info;      // Array of meta info structs for spells, indexed by identities enum (sprite.h)
+SDL_Texture* spriteSheet;       // Texture containing all sprites
+SpriteList activeSprites;       // Linked list of currently active sprites
+SpriteInfo* sprite_info;        // Array of meta info structs for sprites, indexed by identities enum (sprite.h)
+SpellInfo* spell_info;          // Array of meta info structs for spells, indexed by identities enum (sprite.h)
 
-Sprite guys[2] = {NULL, NULL};   // Permanent storage for the guy sprites
+Sprite guys[2] = {NULL, NULL};  // Permanent storage for the guy sprites
 
 /* SPRITE CONSTRUCTOR */
 
 // Initialize a sprite with its on-screen location and stats
-void spawnSprite(char id, double x, double y, double xv, double yv, int act, bool dir, int angle, char spawning)
+void spawnSprite(int id, double x, double y, double xv, double yv, bool dir, int angle, int spawning)
 {
     // Set sprite fields
     Sprite sp = (Sprite) malloc(sizeof(struct sprite));
-    sp->meta = sprite_info[(int)id];
-    sp->frame = sp->meta->frame_sections[(int)act];
+    sp->meta = sprite_info[id];
     sp->hp = sp->meta->max_hp;
     sp->angle = angle; sp->direction = dir;
     sp->x_pos = x;     sp->y_pos = y;
     sp->x_vel = xv;    sp->y_vel = yv;
     sp->casting = 0;   sp->colliding = 0;
-    sp->spell = 0;     sp->action = act;
-    sp->spawning = spawning;
-    sp->action_change = true;
+    sp->spell = 0;     sp->spawning = spawning;
+    sp->frame = 0;     sp->action = SPAWN;
 
     // Only human sprites have cooldowns
     sp->cooldowns = NULL;
-    if(sp->meta->type == HUMANOID) sp->cooldowns = (short*) calloc(NUM_SPELLS, sizeof(short));
+    if(sp->meta->type == HUMANOID) sp->cooldowns = (int*) calloc(NUM_SPELLS, sizeof(int));
 
     // Add sprite to linked list of active sprites
     struct ele* new_sprite = (struct ele*) malloc(sizeof(struct ele));
@@ -262,7 +261,7 @@ static bool isDead(Sprite sp)
     return 0;
 }
 
-/* SPRITE ACTIONS */
+/* SPRITE EVENTS */
 
 // Attempt to walk in a direction after a keyboard input
 bool walk(int guy, bool direction)
@@ -305,24 +304,36 @@ bool cast(int guy, int spell)
     {
         guys[guy]->casting = spell_info[spell]->cast_time;
         guys[guy]->spell = spell;
+
+        // For rockfall, guy should face in the direction of the other guy
+        if(spell == ROCKFALL) guys[guy]->direction = (guys[guy]->x_pos <= guys[(int)!guy]->x_pos);
         return 1;
     }
     return 0;
 }
 
+// Generic actions for when any spell collides with something (always slows down and dies)
+static void collideSpell(Sprite sp)
+{
+    sp->colliding = 20;
+    sp->hp = 0;
+    sp->x_vel *= 0.05;
+    sp->y_vel *= 0.05;
+}
+
 // Action function for launching a fireball (stored as fxn ptr in spellInfo)
-static void Fireball(Sprite sp)
+static void launchFireball(Sprite sp)
 {
     // Starting position and velocity of the fireball
     double fire_x_pos = sp->x_pos + convert(sp->direction) * 20;
     double fire_x_vel = convert(sp->direction) * 1;
 
-    // Spawn the fireball and return score change
-    spawnSprite(FIREBALL, fire_x_pos, sp->y_pos+28, fire_x_vel, 0, MOVE, sp->direction, 0, 0);
+    // Spawn the fireball
+    spawnSprite(FIREBALL, fire_x_pos, sp->y_pos+28, fire_x_vel, 0, sp->direction, 0, 0);
 }
 
 // Action function for launching an iceshock (stored as fxn ptr in spellInfo)
-static void Iceshock(Sprite sp)
+static void launchIceshock(Sprite sp)
 {
     for(double i = 0; i < 4; i++)
     {
@@ -344,54 +355,84 @@ static void Iceshock(Sprite sp)
         // Starting orientation/side-of-caster of the missile
         int direction = (i > 1.5);
         int side = convert(direction);
-        int angle = (short) (57.296 * atan(y_speed / (side * x_speed)));
+        int angle = (int) (57.296 * atan(y_speed / (side * x_speed)));
 
         // Starting position of the missile
         double ice_xpos = (side*x_dist)+sp->x_pos+sp->meta->width/4-3;
         double ice_ypos = sp->y_pos-y_dist;
 
         // Spawn one missile and four small particles around it
-        spawnSprite(ICESHOCK, ice_xpos, ice_ypos, side * x_speed, y_speed, MOVE, direction, angle, 0);
+        spawnSprite(ICESHOCK, ice_xpos, ice_ypos, side * x_speed, y_speed, direction, angle, 0);
         for(int j = 0; j < 4; j++)
         {
             double ptc_x = ice_xpos + (get_rand() - 0.5) * 10;
             double ptc_y = ice_ypos + (get_rand() - 0.5) * 10;
             double ptc_xv = side * (x_speed * get_rand() + 2);
             double ptc_yv = y_speed * get_rand() - x_speed;
-            spawnSprite(ICESHOCK_PARTICLE, ptc_x, ptc_y, ptc_xv, ptc_yv, MOVE, direction, 0, 0);
+            spawnSprite(ICESHOCK_P1, ptc_x, ptc_y, ptc_xv, ptc_yv, direction, 0, 0);
         }
     }
+}
+
+// Action function for launching rockfall (stored as fxn ptr in spellInfo)
+static void launchRockfall(Sprite sp)
+{
+    // Get position of the other guy
+    int other_guy_idx = (sp == guys[0]);
+    Sprite other_guy = guys[other_guy_idx];
+
+    // Set starting position of rock
+    int x = xCenter(other_guy) - sprite_info[ROCKFALL]->width / 2;
+    x = fmin(fmax(x, 60), 964 - sprite_info[ROCKFALL]->width); // Avoid spawning inside trees on forest map
+    int y = other_guy->y_pos - 250;
+
+    // Spawn the rock
+    spawnSprite(ROCKFALL, x, y, 0, -1, RIGHT, 0, 20);
+}
+
+// Action function for a rockfall collision (stored as fxn ptr in spellInfo)
+static void collideRockfall(Sprite sp)
+{
+    // Set collided and slow the sprite down
+    collideSpell(sp);
+
+    // Spawn particles
+    for(int i = 0; i < 8; i++)
+    {
+        int x_dir = convert(i < 4);
+        double x = xCenter(sp);
+        double y = yCenter(sp);
+        double xv = x_dir * sp->y_vel;
+        double yv = sp->y_vel * -2;
+        int a = get_rand();
+        spawnSprite(ROCKFALL_P1, x+(get_rand()-0.5)*40, y, xv + x_dir*5*get_rand(), yv-7*get_rand(), 0, a, 0);
+        spawnSprite(ROCKFALL_P2, x+(get_rand()-0.5)*40, y, xv + x_dir*5*get_rand(), yv-7*get_rand(), 0, a, 0);
+        spawnSprite(ROCKFALL_P2, x+(get_rand()-0.5)*40, y, xv + x_dir*5*get_rand(), yv-7*get_rand(), 0, a, 0);
+    }
+    return;
 }
 
 /* PER FRAME UPDATES */
 
-// If a sprite is ready to launch a casted spell, launch it
+// If a human sprite is ready to launch a casted spell, launch it
 static void launchSpell(Sprite sp)
 {
-    // Only human sprites can cast spells
-    if(sp->meta->type == HUMANOID)
+    // Set cooldown and launch the spell if sprite has finished its casting animation
+    int spell = sp->spell;
+    if(sp->casting == spell_info[spell]->finish_time)
     {
-        // Iterate over all possible spells
-        int spell = sp->spell;
-        for(int i = 0; i < NUM_SPELLS; i++)
-        {
-            // Set cooldown and launch the spell if sprite has finished its casting animation
-            if(spell == i && sp->casting == spell_info[spell]->finish_time)
-            {
-                sp->cooldowns[spell] = spell_info[spell]->cooldown;
-                spell_info[spell]->launch(sp);
-            }
-        }
+        sp->cooldowns[spell] = spell_info[spell]->cooldown;
+        spell_info[spell]->on_launch(sp);
     }
 }
 
-// All sprites launch any spells they are ready to launch
+// Human sprites launch any spells they are ready to launch
 void launchSpells()
 {
     // Iterate over active sprites
     for(struct ele* cursor = activeSprites; cursor != NULL; cursor = cursor->next)
     {
-        launchSpell(cursor->sp);
+        if(cursor->sp->meta->type == HUMANOID) launchSpell(cursor->sp);
     }
 }
 
@@ -442,25 +483,19 @@ static void applyCollision(Sprite sp, Sprite other)
     sp->hp = fmax(0, sp->hp - other->meta->power);
 
     // Get which direction the collision is coming from
-    int direction = convert(other->x_pos > sp->x_pos);
+    int direction = convert(xCenter(other) > xCenter(sp));
 
-    // Humans are knocked back by collisions
+    // Humans are knocked back by collisions, and spellcasts are cancelled
     if(sp->meta->type == HUMANOID)
     {
         sp->colliding = 20;
-        sp->x_vel = -5*direction;
+        sp->x_vel = -5 * direction;
         sp->y_vel = -3;
         sp->casting = 0;
     }
 
-    // Spells are slowed down on collision
-    if(sp->meta->type == SPELL)
-    {
-        sp->colliding = 20;
-        sp->x_vel *= 0.05;
-        sp->y_vel *= 0.05;
-        sp->casting = 0;
-    }
+    // Spells have specialized collision handlers
+    if(sp->meta->type == SPELL) spell_info[sp->meta->id]->on_collide(sp);
 }
 
 // Detect and handle all collisions between sprites in this frame
@@ -469,28 +504,19 @@ void spriteCollisions()
     // Iterate over all active sprites
     for(struct ele* cursor = activeSprites; cursor != NULL; cursor = cursor->next)
     {
-        // Particles don't collide with other sprites
+        // Colliding sprites, spawning sprites, and particles don't interact
         Sprite sp = cursor->sp;
-        if(sp->meta->type == PARTICLE) continue;
-
-        // Colliding sprites can't collide again
-        if(sp->colliding) continue;
+        if(sp->meta->type == PARTICLE || sp->colliding || sp->spawning) continue;
 
         // Otherwise, need to check for a collision against every other sprite
         for(struct ele* cursor = activeSprites; cursor != NULL; cursor = cursor->next)
         {
-            // Colliding sprites can't collide again
+            // Colliding sprites, spawning sprites, and particles don't interact
             Sprite other = cursor->sp;
-            if(other->colliding) continue;
+            if(other->meta->type == PARTICLE || other->colliding || other->spawning) continue;
 
-            // Sprites don't collide with themselves
-            if(sp == other) continue;
-
-            // Particles don't collide with other sprites
-            if(other->meta->type == PARTICLE) continue;
-
-            // Humans don't collide with other humans
-            if(other->meta->type == HUMANOID && sp->meta->type == HUMANOID) continue;
+            // Sprites don't collide with themselves and humans don't collide with other humans
+            if(sp == other || (other->meta->type == HUMANOID && sp->meta->type == HUMANOID)) continue;
 
             // Bounding circle check – if two sprites aren't even close to each other, don't bother
             if(!boundingCircleCheck(sp, other)) continue;
@@ -509,13 +535,12 @@ void spriteCollisions()
 static void terrainCollision(Sprite sp, int* platforms, int* walls)
 {
     // Precomputation
-    int type = sp->meta->type;
     int touching_wall = touchingWall(sp, walls);
     int on_platform = onPlatform(sp, platforms);
     int on_ground = onGround(sp, platforms);
 
     // Different sprite types handle terrain collisions differently
-    switch(type)
+    switch(sp->meta->type)
     {
         case HUMANOID:
             // Humans are stopped by walls
@@ -537,11 +562,8 @@ static void terrainCollision(Sprite sp, int* platforms, int* walls)
             // Spells collide with ground and walls
             if(!sp->colliding && (on_ground || touching_wall != -1))
             {
-                // Spells are slowed down and killed on collision
-                sp->hp = 0;
-                sp->colliding = 20;
-                sp->x_vel *= 0.05;
-                sp->y_vel *= 0.05;
+                // Spells have specialized collision handlers
+                spell_info[sp->meta->id]->on_collide(sp);
             }
             break;
 
@@ -549,7 +571,7 @@ static void terrainCollision(Sprite sp, int* platforms, int* walls)
             // Particles collide with ground and walls
             if(!sp->colliding && (on_ground || touching_wall != -1))
             {
-                // Particles die immediately on collision
+                // Particles die immediately on terrain contact
                 sp->hp = 0;
                 sp->colliding = 2;
             }
@@ -569,39 +591,43 @@ void terrainCollisions(int* platforms, int* walls)
 // Update which animation action the sprite is currently in based on its state
 static void updateAction(Sprite sp)
 {
-    if(sp->meta->type == HUMANOID && sp->hp == 0)           setAction(sp, DIE);
-    else if(sp->spawning)                                   setAction(sp, SPAWN);
-    else if(sp->colliding)                                  setAction(sp, COLLIDE);
-    else if(sp->casting)                                    setAction(sp, spell_info[(int)sp->spell]->action);
-    else if(sp->x_vel == 0 && sp->y_vel == 0)               setAction(sp, IDLE);
-    else if(sp->meta->type == HUMANOID && sp->y_vel != 0)   setAction(sp, JUMP);
-    else                                                    setAction(sp, MOVE);
+    double xv = sp->x_vel;
+    double yv = sp->y_vel;
+    int type = sp->meta->type;
+    if(type == HUMANOID && sp->hp == 0)             setAction(sp, DIE);
+    else if(sp->spawning)                           setAction(sp, SPAWN);
+    else if(sp->colliding)                          setAction(sp, COLLIDE);
+    else if(sp->casting)                            setAction(sp, spell_info[sp->spell]->action);
+    else if(type == HUMANOID && xv == 0 && yv == 0) setAction(sp, IDLE);
+    else if(type == HUMANOID && yv != 0)            setAction(sp, JUMP);
+    else                                            setAction(sp, MOVE);
 }
 
 // Update the animation frame (picture that gets drawn) for a sprite
 static void updateAnimationFrame(Sprite sp)
 {
-    // Update which action the sprite is currently in based on its state
+    // Update which action the sprite is currently taking based on its state
     updateAction(sp);
 
     // Sprite proceeds through animation frames faster during certain actions
+    int a = sp->action;
     double increment = ANIMATION_SPEED * 0.1;
-    if(sp->action == JUMP || sp->action == COLLIDE) increment *= 1.5;
-    if(sp->action == CAST_FIREBALL || sp->action == CAST_ICESHOCK || sp->action == DIE) increment *= 2.5;
+    if(a == JUMP || a == COLLIDE || a == SPAWN) increment *= 1.5;
+    if(a >= CAST_FIREBALL) increment *= 2.5;
     sp->frame += increment;
 
     // If the sprite's action has just changed, reset to first animation frame of that action
     if(sp->action_change)
     {
-        sp->frame = sp->meta->frame_sections[(int)sp->action];
-        if(sp->action == MOVE && sp->meta->id == GUY) sp->frame++;
+        sp->frame = sp->meta->frame_sections[a];
+        if(a == MOVE && sp->meta->id == GUY) sp->frame++;
         sp->action_change = false;
     }
 
     // Wraparound to first animation frame of an action if we reach the last frame for that action
-    if(sp->frame >= sp->meta->frame_sections[sp->action+1])
+    if(sp->frame >= sp->meta->frame_sections[a+1])
     {
-        sp->frame = sp->meta->frame_sections[(int)sp->action];
+        sp->frame = sp->meta->frame_sections[a];
     }
 }
 
@@ -629,32 +655,42 @@ static void moveSprite(Sprite sp)
             if(!sp->colliding) sp->x_vel += convert(sp->x_vel > 0.0f)*0.1;
 
             // Fireball faces in the direction of x-velocity (LEFT and RIGHT are in an enum so this works)
-            sp->direction = (sp->x_vel > 0);
+            sp->direction = (sp->x_vel >= 0);
+            break;
+
+        case ROCKFALL:
+            // Rockfall falls quickly after it's done spawning
+            if(!sp->colliding && !sp->spawning) sp->y_vel += 1.6;
+
+            // Rockfall rotates slowly as it falls
+            sp->direction = (sp->x_vel >= 0);
+            sp->angle += 2;
+            if(sp->colliding) sp->angle = 0;
+            break;
+
+        case ROCKFALL_P1:
+        case ROCKFALL_P2:
+            // Rockfall particles rotate and fall
+            sp->direction = (sp->x_vel >= 0);
+            sp->angle += 5;
+            sp->y_vel += 0.3;
             break;
 
         case ICESHOCK:
-        case ICESHOCK_PARTICLE:
+        case ICESHOCK_P1:
             // Iceshock is affected by gravity and air resistance
             if(!sp->colliding) sp->y_vel += 0.3;
             sp->x_vel += convert(sp->x_vel < 0.0f) * 0.03;
 
             // Iceshock faces in the direction of xy-velocity
-            sp->direction = (sp->x_vel > 0);
-            sp->angle = (short) (57.296 * atan(sp->y_vel / sp->x_vel));
+            sp->direction = (sp->x_vel >= 0);
+            sp->angle = (int) (57.296 * atan(sp->y_vel / sp->x_vel));
             break;
 
-        default:
-            // Update x velocity
-            if(fabs(sp->x_vel) <= 0.3)
-            {
-                // Stop sprite completely if speed is low enough
-                sp->x_vel = 0;
-            }
-            else
-            {
-                // Otherwise apply friction / air resistance
-                sp->x_vel += convert(sp->x_vel < 0.0f)*0.15;
-            }
+        case GUY:
+            // Update x velocity (friction / air resistance)
+            if(fabs(sp->x_vel) <= 0.3) sp->x_vel = 0;
+            else                       sp->x_vel += convert(sp->x_vel < 0.0f)*0.15;
 
             // Update y velocity (terminal velocity of 50)
             sp->y_vel = fmin(sp->y_vel + 0.5, 50);
@@ -672,7 +708,7 @@ void moveSprites()
 }
 
 // Advance timed variables for this sprite
-static void advanceTimer(Sprite sp)
+static void advanceTime(Sprite sp)
 {
     // Update casting time
     if(sp->casting) sp->casting--;
@@ -699,11 +735,11 @@ void advanceTimers()
     // Iterate over active sprites
     for(struct ele* cursor = activeSprites; cursor != NULL; cursor = cursor->next)
     {
-        advanceTimer(cursor->sp);
+        advanceTime(cursor->sp);
     }
 }
 
-// Render a sprite's bounding boxes on top of the sprite (only in DEBUG_MODE)
+// Render a sprite's bounding boxes on top of the sprite (only in debug)
 static void renderBounds(Sprite sp)
 {
     // For each box, render 4 lines to create the rectangle
@@ -712,7 +748,7 @@ static void renderBounds(Sprite sp)
     {
         // Line 1
         SDL_Rect box = bounds[i];
-        SDL_Rect clip = {344, 72, box.w, 1};
+        SDL_Rect clip = {344, 196, box.w, 1};
         SDL_Rect renderQuad = {(int)sp->x_pos + box.x, (int)sp->y_pos + box.y, box.w, 1};
         SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, sp->angle, NULL, SDL_FLIP_NONE);
 
@@ -721,7 +757,7 @@ static void renderBounds(Sprite sp)
         SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, sp->angle, NULL, SDL_FLIP_NONE);
 
         // Line 3
-        clip = (SDL_Rect) {344, 72, 1, box.h};
+        clip = (SDL_Rect) {344, 196, 1, box.h};
         renderQuad = (SDL_Rect) {(int)sp->x_pos+ box.x, (int)sp->y_pos + box.y, 1, box.h};
         SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, sp->angle, NULL, SDL_FLIP_NONE);
 
@@ -746,7 +782,7 @@ static void renderSprite(Sprite sp)
     SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, sp->angle, NULL, flipType);
 
     // In debug mode, render bounding boxes and sprite positions
-    if(DEBUG_MODE && sp->meta->type != PARTICLE)
+    if(debug && sp->meta->type != PARTICLE)
     {
         renderBounds(sp);
         clip = (SDL_Rect) {366, 67, 3, 3};
@@ -789,21 +825,23 @@ static SDL_Rect* reflectBounds(SDL_Rect* rbounds, int num_bounds, int width)
 }
 
 // Assign meta info fields for a spell
-static SpellInfo initSpell(char action, char cast_time, char finish_time, short cooldown, void (*launch_fxn)(Sprite))
+static SpellInfo initSpell(int act, int cast, int finish, int cd,
+                           void (*launch)(Sprite), void (*collide)(Sprite))
 {
     SpellInfo this_spell = (SpellInfo) malloc(sizeof(struct spell_metainfo));
-    this_spell->action = action;
-    this_spell->cast_time = cast_time;
-    this_spell->finish_time = finish_time;
-    this_spell->cooldown = cooldown;
-    if(DEBUG_MODE) this_spell->cooldown = 0; // no cooldowns in debug mode
-    this_spell->launch = launch_fxn;
+    this_spell->action = act;
+    this_spell->cast_time = cast;
+    this_spell->finish_time = finish;
+    this_spell->cooldown = cd;
+    if(debug) this_spell->cooldown = 0; // no cooldowns in debug mode
+    this_spell->on_launch = launch;
+    this_spell->on_collide = collide;
     return this_spell;
 }
 
 // Assign meta info fields for a sprite
-static SpriteInfo initSprite(char id, char type, short power, short hp, short width, short height,
-                             short sheet_pos, char* fs, short num_bounds, SDL_Rect* bounds)
+static SpriteInfo initSprite(int id, int type, int power, int hp, int width, int height,
+                             int sheet_pos, int* fs, int num_bounds, SDL_Rect* bounds)
 {
     SpriteInfo this_sprite = (SpriteInfo) malloc(sizeof(struct sprite_metainfo));
     this_sprite->id = id;
@@ -828,48 +866,75 @@ void loadSpriteInfo()
     spriteSheet = loadTexture("art/Spritesheet.bmp");
 
     // Make space for meta info structs
-    sprite_info = (SpriteInfo*)malloc(sizeof(SpriteInfo)*NUM_SPRITES);
-    spell_info =(SpellInfo*)malloc(sizeof(SpellInfo)*NUM_SPELLS);
+    sprite_info = (SpriteInfo*) malloc(sizeof(SpriteInfo)*NUM_SPRITES);
+    spell_info =(SpellInfo*) malloc(sizeof(SpellInfo)*NUM_SPELLS);
 
     // Initialize meta info for spells
-    spell_info[FIREBALL] = initSpell(CAST_FIREBALL, 32, 8, 120, Fireball);
-    spell_info[ICESHOCK] = initSpell(CAST_ICESHOCK, 32, 8, 300, Iceshock);
+    spell_info[FIREBALL] = initSpell(CAST_FIREBALL, 32, 8, 120, launchFireball, collideSpell);
+    spell_info[ICESHOCK] = initSpell(CAST_ICESHOCK, 32, 8, 240, launchIceshock, collideSpell);
+    spell_info[ROCKFALL] = initSpell(CAST_ROCKFALL, 32, 32, 360, launchRockfall, collideRockfall);
+    // DARKEDGE - 480 frame CD (8 seconds)
+    // ARCSTORM - 12 seconds?
 
-    // Frame sections, bounding boxes, and other metadata for Fireball sprite
-    char* fs1 = (char*) malloc(sizeof(char) * 3);
-    memcpy(fs1, (char[]) {0, 0, 2, 5}, 4);
+    // HUMANS
 
-    SDL_Rect* bounds1 = malloc(sizeof(SDL_Rect) * 1);
-    bounds1[0] = (SDL_Rect) {6, 2, 12, 6};
+    int numBounds = 2;
 
-    sprite_info[FIREBALL] = initSprite(FIREBALL, SPELL, 20, 1, 23, 10, 60, fs1, 1, bounds1);
+    // Sprite metadata: Guy
+    int* fs = (int*) malloc(sizeof(int) * 10);
+    memcpy(fs, (int[]) {0, 0, 4, 5, 10, 14, 22, 30, 38, 43}, sizeof(int) * 10);
+    SDL_Rect* bounds = malloc(sizeof(SDL_Rect) * numBounds);
+    bounds[0] = (SDL_Rect) {9, 6, 15, 14};
+    bounds[1] = (SDL_Rect) {10, 24, 10, 35};
+    sprite_info[GUY] = initSprite(GUY, HUMANOID, 10, 100, 28, 60, 0, fs, numBounds, bounds);
 
-    // Frame sections, bounding boxes, and other metadata for Iceshock sprite
-    char* fs2 = (char*) malloc(sizeof(char) * 3);
-    memcpy(fs2, (char[]) {0, 0, 2, 5}, 4);
+    // SPELLS
 
-    SDL_Rect* bounds2 = malloc(sizeof(SDL_Rect) * 1);
-    bounds2[0] = (SDL_Rect) {6, 1, 13, 7};
+    numBounds = 1;
 
-    sprite_info[ICESHOCK] = initSprite(ICESHOCK, SPELL, 30, 1, 23, 10, 70, fs2, 1, bounds2);
+    // Sprite metadata: Fireball
+    fs = (int*) malloc(sizeof(int) * 4);
+    memcpy(fs, (int[]) {0, 0, 2, 5}, sizeof(int) * 4);
+    bounds = malloc(sizeof(SDL_Rect) * numBounds);
+    bounds[0] = (SDL_Rect) {6, 2, 12, 6};
+    sprite_info[FIREBALL] = initSprite(FIREBALL, SPELL, 15, 1, 23, 10, 60, fs, numBounds, bounds);
 
-    // Frame sections and other metadata for iceshock particle sprite
-    char* fs3 = (char*) malloc(sizeof(char) * 3);
-    memcpy(fs3, (char[]) {0, 0, 2, 2}, 4);
+    // Sprite metadata: Iceshock
+    fs = (int*) malloc(sizeof(int) * 4);
+    memcpy(fs, (int[]) {0, 0, 2, 5}, sizeof(int) * 4);
+    bounds = malloc(sizeof(SDL_Rect) * numBounds);
+    bounds[0] = (SDL_Rect) {6, 1, 13, 7};
+    sprite_info[ICESHOCK] = initSprite(ICESHOCK, SPELL, 25, 1, 23, 10, 70, fs, numBounds, bounds);
 
-    SDL_Rect* bounds3 = NULL;
+    // Sprite metadata: Rockfall
+    fs = (int*) malloc(sizeof(int) * 4);
+    memcpy(fs, (int[]) {0, 3, 4, 7}, sizeof(int) * 4);
+    bounds = malloc(sizeof(SDL_Rect) * numBounds);
+    bounds[0] = (SDL_Rect) {5, 5, 90, 90};
+    sprite_info[ROCKFALL] = initSprite(ROCKFALL, SPELL, 35, 1, 100, 100, 85, fs, numBounds, bounds);
 
-    sprite_info[ICESHOCK_PARTICLE] = initSprite(ICESHOCK_PARTICLE, PARTICLE, 0, 1, 5, 5, 80, fs3, 0, bounds3);
+    // TODO: Sprite metadata: Darkedge
+    // TODO: Sprite metadata: Arcstorm
 
-    // Frame sections, bounding boxes, and other metadata for Guy sprite
-    char* fs4 = (char*) malloc(sizeof(char) * 7);
-    memcpy(fs4, (char[]) {0, 0, 4, 5, 10, 14, 22, 30, 35}, 9);
+    // PARTICLES
 
-    SDL_Rect* bounds4 = malloc(sizeof(SDL_Rect) * 2);
-    bounds4[0] = (SDL_Rect) {9, 6, 15, 14};
-    bounds4[1] = (SDL_Rect) {10, 24, 10, 35};
+    numBounds = 0;
+    bounds = NULL;
 
-    sprite_info[GUY] = initSprite(GUY, HUMANOID, 10, 100, 28, 60, 0, fs4, 2, bounds4);
+    // Sprite metadata: Iceshock Particle
+    fs = (int*) malloc(sizeof(int) * 4);
+    memcpy(fs, (int[]) {0, 0, 2, 2}, sizeof(int) * 4);
+    sprite_info[ICESHOCK_P1] = initSprite(ICESHOCK_P1, PARTICLE, 0, 1, 5, 5, 80, fs, numBounds, bounds);
+
+    // Sprite metadata: Rockfall Particle 1
+    fs = (int*) malloc(sizeof(int) * 4);
+    memcpy(fs, (int[]) {0, 0, 1, 1}, sizeof(int) * 4);
+    sprite_info[ROCKFALL_P1] = initSprite(ROCKFALL_P1, PARTICLE, 0, 1, 25, 25, 185, fs, numBounds, bounds);
+
+    // Sprite metadata: Rockfall Particle 2
+    fs = (int*) malloc(sizeof(int) * 4);
+    memcpy(fs, (int[]) {0, 0, 2, 2}, sizeof(int) * 4);
+    sprite_info[ROCKFALL_P2] = initSprite(ROCKFALL_P2, PARTICLE, 0, 1, 5, 5, 210, fs, numBounds, bounds);
 }
 
 /* DATA UNLOADING */

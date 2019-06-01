@@ -3,10 +3,14 @@
 #include "../headers/level.h"
 #include "../headers/interface.h"
 
+// Debug mode is off by default
+bool debug = false;
+
 // Window and renderer, used by all modules
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 
+// Load SDL and initialize the window, renderer, audio, and data
 bool loadGame()
 {
     // Initialize SDL
@@ -38,6 +42,7 @@ bool loadGame()
     return true;
 }
 
+// Free all resources and quit SDL
 void quitGame()
 {
     // Free sprite metainfo
@@ -94,8 +99,11 @@ void resetGame(int* mode, int* selection, int* vs_or_ai)
     setLevel(FOREST, TITLE);
 }
 
-int main(int argc, char* args[])
+int main(int argc, char** argv)
 {
+    // Set debug mode if given as command line arg
+    if(argc > 1 && !strcmp(argv[1], "-debug")) debug = true;
+
     // Load game
     if(!loadGame())
     {
@@ -115,11 +123,11 @@ int main(int argc, char* args[])
     long long frame = 0;
 
     // In debug mode, spawn the guys immediately
-    if(DEBUG_MODE)
+    if(debug)
     {
         int* starts = getStartingPositions(getLevel());
-        spawnSprite(GUY, starts[0], starts[1], 0, 0, JUMP, RIGHT, 0, 0);
-        spawnSprite(GUY, starts[2], starts[3], 0, 0, JUMP, LEFT, 0, 0);
+        spawnSprite(GUY, starts[0], starts[1], 0, 0, RIGHT, 0, 0);
+        spawnSprite(GUY, starts[2], starts[3], 0, 0, LEFT, 0, 0);
         mode = TITLE;
     }
 
@@ -133,12 +141,12 @@ int main(int argc, char* args[])
 
         // Some events occur at specific points in the opening scene
         // End opening and give control to the player after 375 frames
-        if(mode == OPENING && !DEBUG_MODE)
+        if(mode == OPENING && !debug)
         {
             int* starts = getStartingPositions(getLevel());
             if(frame == 10) Mix_PlayMusic(main_theme, -1);
-            if(frame == 100) spawnSprite(GUY, starts[0], starts[1]-300, 0, 0, JUMP, RIGHT, 0, 0);
-            if(frame == 225) spawnSprite(GUY, starts[2], starts[3]-300, 0, 0, JUMP, LEFT, 0, 0);
+            if(frame == 100) spawnSprite(GUY, starts[0], starts[1]-300, 0, 0, RIGHT, 0, 0);
+            if(frame == 225) spawnSprite(GUY, starts[2], starts[3]-300, 0, 0, LEFT, 0, 0);
             if(frame == 375) mode = TITLE;
         }
 
@@ -237,6 +245,7 @@ int main(int argc, char* args[])
             if(mode == VS)
             {
                 // Input for guy 0
+                if(!succ && keys[SDL_SCANCODE_3])                          succ = cast(guy, ROCKFALL);
                 if(!succ && keys[SDL_SCANCODE_2])                          succ = cast(guy, ICESHOCK);
                 if(!succ && keys[SDL_SCANCODE_1])                          succ = cast(guy, FIREBALL);
                 if(!succ && keys[SDL_SCANCODE_D])                          succ = jump(guy);
@@ -246,6 +255,7 @@ int main(int argc, char* args[])
                 // Input for guy 1
                 succ = 0;
                 guy = 1;
+                if(!succ && keys[SDL_SCANCODE_I])                                 succ = cast(guy, ROCKFALL);
                 if(!succ && keys[SDL_SCANCODE_U])                                 succ = cast(guy, ICESHOCK);
                 if(!succ && keys[SDL_SCANCODE_Y])                                 succ = cast(guy, FIREBALL);
                 if(!succ && keys[SDL_SCANCODE_UP])                                succ = jump(guy);
@@ -255,6 +265,7 @@ int main(int argc, char* args[])
             else if(mode == AI)
             {
                 // Input for guy 0
+                if(!succ && keys[SDL_SCANCODE_3])                                 succ = cast(guy, ROCKFALL);
                 if(!succ && keys[SDL_SCANCODE_2])                                 succ = cast(guy, ICESHOCK);
                 if(!succ && keys[SDL_SCANCODE_1])                                 succ = cast(guy, FIREBALL);
                 if(!succ && keys[SDL_SCANCODE_UP])                                succ = jump(guy);
@@ -297,7 +308,7 @@ int main(int argc, char* args[])
 
         // Cap framerate at MAX_FPS
         double ms_per_frame = 1000.0 / MAX_FPS;
-        if(DEBUG_MODE) ms_per_frame *= 3;
+        if(debug) ms_per_frame *= 3;
         int sleep_time = ms_per_frame - (SDL_GetTicks() - start_time);
         if(sleep_time > 0) SDL_Delay(sleep_time);
         frame++;

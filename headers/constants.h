@@ -9,10 +9,6 @@
 #include <stdbool.h>
 #include <math.h>
 
-// Debug mode - in debug mode, the framerate is lowered, the opening scene is skipped,
-// there are no cooldowns, and sprite coordinates and bounding boxes are rendered on them.
-#define DEBUG_MODE false
-
 // Screen size
 #define SCREEN_WIDTH 1024
 #define SCREEN_HEIGHT 768
@@ -35,3 +31,7 @@ static inline int convert(bool c) { return (c - (c == 0)); }
 extern SDL_Window* window;
 extern SDL_Renderer* renderer;
 SDL_Texture* loadTexture(const char* path);
+
+// Debug mode - in debug mode, the framerate is lowered, the opening scene is skipped,
+// there are no cooldowns, and sprite coordinates and bounding boxes are rendered on them.
+extern bool debug;

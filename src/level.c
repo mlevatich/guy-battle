@@ -12,7 +12,7 @@ typedef struct background
     int y_init;                 // initial y rendering position
     double xv_init;             // initial x velocity
     double yv_init;             // initial y velocity
-    char drift_type;            // how does this background move (SCROLL, DRIFT)
+    int drift_type;             // how does this background move (SCROLL, DRIFT)
 
     // State info about the background
     double x;                   // current x position
@@ -107,10 +107,7 @@ void moveBackground()
     else
     {
         // Scrolling backgrounds reset so they appear to loop infinitely
-        if(bg->x >= bg->width || bg->x <= bg->width * -1)
-        {
-            bg->x = 0;
-        }
+        if(bg->x >= bg->width || bg->x <= bg->width * -1) bg->x = 0;
     }
 }
 
@@ -149,7 +146,7 @@ void renderLevel()
 /* DATA ALLOCATION / INITIALIZATION */
 
 // Assign background fields
-static Background initBackground(const char* path, char drift, int w, int h, int x, int y, double x_vel, double y_vel)
+static Background initBackground(const char* path, int drift, int w, int h, int x, int y, double x_vel, double y_vel)
 {
     // Make space for this background and load its texture
     Background this_background = (Background) malloc(sizeof(struct background));

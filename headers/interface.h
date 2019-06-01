@@ -10,7 +10,7 @@ enum modes
 { OPENING, TITLE, CONTROLS, STAGE_SELECT, VS, AI, PAUSE, GAME_OVER };
 
 // Move the text selection arrow
-int hover(char mode, int direction);
+int hover(int mode, int direction);
 
 // Change the score
 void setScore(int new_score);

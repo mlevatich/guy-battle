@@ -8,11 +8,11 @@
 
 // Sprite list - doubles as the spell list, so spells must come first
 enum identities
-{ FIREBALL, ICESHOCK, ICESHOCK_PARTICLE, GUY };
+{ FIREBALL, ICESHOCK, ROCKFALL, ICESHOCK_P1, ROCKFALL_P1, ROCKFALL_P2, GUY };
 
 // Possible action states for a sprite
 enum action_types
-{ SPAWN, MOVE, COLLIDE, IDLE, JUMP, CAST_FIREBALL, CAST_ICESHOCK, DIE };
+{ SPAWN, MOVE, COLLIDE, IDLE, JUMP, CAST_FIREBALL, CAST_ICESHOCK, CAST_ROCKFALL, DIE };
 
 // Sprite types
 enum types
@@ -22,7 +22,7 @@ enum types
 typedef struct sprite* Sprite;
 
 // Spawn (construct) a sprite with the given fields
-void spawnSprite(char id, double x, double y, double xv, double yv, int act, bool dir, int angle, char spawning);
+void spawnSprite(int id, double x, double y, double xv, double yv, bool dir, int angle, int spawning);
 
 // Hide a guy in the top right corner of the map
 void hideGuy(int guy);
