@@ -750,20 +750,20 @@ static void renderBounds(Sprite sp)
         SDL_Rect box = bounds[i];
         SDL_Rect clip = {344, 196, box.w, 1};
         SDL_Rect renderQuad = {(int)sp->x_pos + box.x, (int)sp->y_pos + box.y, box.w, 1};
-        SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, sp->angle, NULL, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
 
         // Line 2
         renderQuad = (SDL_Rect) {(int)sp->x_pos + box.x, (int)sp->y_pos + box.y + box.h, box.w, 1};
-        SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, sp->angle, NULL, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
 
         // Line 3
         clip = (SDL_Rect) {344, 196, 1, box.h};
         renderQuad = (SDL_Rect) {(int)sp->x_pos+ box.x, (int)sp->y_pos + box.y, 1, box.h};
-        SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, sp->angle, NULL, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
 
         // Line 4
         renderQuad = (SDL_Rect) {(int)sp->x_pos + box.x + box.w, (int)sp->y_pos + box.y, 1, box.h};
-        SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, sp->angle, NULL, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
     }
 }
 
