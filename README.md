@@ -1,24 +1,19 @@
 # GUY_BATTLE
 
-A 2D fighting game I made, written in C using SDL!
+In this competitive 2-player fighting game, take control of a Guy,
+a powerful mage seeking to destroy the Other Guy, his mortal foe.
 
-I also wrote the music in SuperCollider and drew the art/animations in GIMP.
+Challenge your friends and claim victory in the Cultist Clearing, or on
+Phoenix Mountain, for only one Guy will make it out alive!
 
-It's a work in progress right now. Planned features (in order) include:
-
-- Sound effects
-- Collisions / hp loss / dying (i.e. the full game loop)
-- Three new spells! For a total of five
-- Better art for Phoenix Mountain
-- AI and single player mode
-- Improved animations
+I wrote GUY_BATTLE in C, using the development library SDL. I wrote the music
+in SuperCollider and drew the art/animations in GIMP.
 
 # Dependencies/Install
 
-I've only tested on MacOS as of now - no guarantees for Windows or Linux, but should
-be compatible with older MacOS versions.
+The game is currently only available for MacOS.
 
-You'll need to install SDL2 and SDL_mixer - on Mac this can be done easily with brew:
+You'll need to install SDL2 and SDL_mixer - this can be done easily with brew:
 
 ~~~~
 # if you need to install brew

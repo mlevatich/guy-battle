@@ -1,3 +1,8 @@
+// A chiptune rendition of "Twilight of the Gods", written by Yuka Tsujiyoko
+// for the game "Fire Emblem Echoes: Shadows of Valentia"
+
+// This arrangement was written by me, Max Levatich. I claim no authorship over the original song.
+
 (
 
 s.boot;
