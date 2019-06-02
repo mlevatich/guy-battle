@@ -660,7 +660,7 @@ static void moveSprite(Sprite sp)
 
         case ROCKFALL:
             // Rockfall falls quickly after it's done spawning
-            if(!sp->colliding && !sp->spawning) sp->y_vel += 1.6;
+            if(!sp->colliding && !sp->spawning) sp->y_vel += 1.5;
 
             // Rockfall rotates slowly as it falls
             sp->direction = (sp->x_vel >= 0);
@@ -872,7 +872,7 @@ void loadSpriteInfo()
     // Initialize meta info for spells
     spell_info[FIREBALL] = initSpell(CAST_FIREBALL, 32, 8, 120, launchFireball, collideSpell);
     spell_info[ICESHOCK] = initSpell(CAST_ICESHOCK, 32, 8, 240, launchIceshock, collideSpell);
-    spell_info[ROCKFALL] = initSpell(CAST_ROCKFALL, 32, 32, 360, launchRockfall, collideRockfall);
+    spell_info[ROCKFALL] = initSpell(CAST_ROCKFALL, 40, 40, 360, launchRockfall, collideRockfall);
     // DARKEDGE - 480 frame CD (8 seconds)
     // ARCSTORM - 12 seconds?
 
@@ -882,7 +882,7 @@ void loadSpriteInfo()
 
     // Sprite metadata: Guy
     int* fs = (int*) malloc(sizeof(int) * 10);
-    memcpy(fs, (int[]) {0, 0, 4, 5, 10, 14, 22, 30, 38, 43}, sizeof(int) * 10);
+    memcpy(fs, (int[]) {0, 0, 4, 5, 10, 14, 22, 30, 40, 45}, sizeof(int) * 10);
     SDL_Rect* bounds = malloc(sizeof(SDL_Rect) * numBounds);
     bounds[0] = (SDL_Rect) {9, 6, 15, 14};
     bounds[1] = (SDL_Rect) {10, 24, 10, 35};
