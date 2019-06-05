@@ -144,7 +144,7 @@ int main(int argc, char** argv)
         if(mode == OPENING && !debug)
         {
             int* starts = getStartingPositions(getLevel());
-            if(frame == 10) Mix_PlayMusic(main_theme, -1);
+            // if(frame == 10) Mix_PlayMusic(main_theme, -1);
             if(frame == 100) spawnSprite(GUY, starts[0], starts[1]-300, 0, 0, RIGHT, 0, 0);
             if(frame == 225) spawnSprite(GUY, starts[2], starts[3]-300, 0, 0, LEFT, 0, 0);
             if(frame == 375) mode = TITLE;
@@ -245,6 +245,7 @@ int main(int argc, char** argv)
             if(mode == VS)
             {
                 // Input for guy 0
+                if(!succ && keys[SDL_SCANCODE_4])                          succ = cast(guy, DARKEDGE);
                 if(!succ && keys[SDL_SCANCODE_3])                          succ = cast(guy, ROCKFALL);
                 if(!succ && keys[SDL_SCANCODE_2])                          succ = cast(guy, ICESHOCK);
                 if(!succ && keys[SDL_SCANCODE_1])                          succ = cast(guy, FIREBALL);
@@ -255,6 +256,7 @@ int main(int argc, char** argv)
                 // Input for guy 1
                 succ = 0;
                 guy = 1;
+                if(!succ && keys[SDL_SCANCODE_O])                                 succ = cast(guy, DARKEDGE);
                 if(!succ && keys[SDL_SCANCODE_I])                                 succ = cast(guy, ROCKFALL);
                 if(!succ && keys[SDL_SCANCODE_U])                                 succ = cast(guy, ICESHOCK);
                 if(!succ && keys[SDL_SCANCODE_Y])                                 succ = cast(guy, FIREBALL);
@@ -265,6 +267,7 @@ int main(int argc, char** argv)
             else if(mode == AI)
             {
                 // Input for guy 0
+                if(!succ && keys[SDL_SCANCODE_4])                                 succ = cast(guy, DARKEDGE);
                 if(!succ && keys[SDL_SCANCODE_3])                                 succ = cast(guy, ROCKFALL);
                 if(!succ && keys[SDL_SCANCODE_2])                                 succ = cast(guy, ICESHOCK);
                 if(!succ && keys[SDL_SCANCODE_1])                                 succ = cast(guy, FIREBALL);

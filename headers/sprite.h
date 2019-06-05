@@ -8,11 +8,11 @@
 
 // Sprite list - doubles as the spell list, so spells must come first
 enum identities
-{ FIREBALL, ICESHOCK, ROCKFALL, ICESHOCK_P1, ROCKFALL_P1, ROCKFALL_P2, GUY };
+{ FIREBALL, ICESHOCK, ROCKFALL, DARKEDGE, ICESHOCK_P1, ROCKFALL_P1, ROCKFALL_P2, DARKEDGE_P1, GUY };
 
 // Possible action states for a sprite
 enum action_types
-{ SPAWN, MOVE, COLLIDE, IDLE, JUMP, CAST_FIREBALL, CAST_ICESHOCK, CAST_ROCKFALL, DIE };
+{ SPAWN, MOVE, COLLIDE, IDLE, JUMP, CAST_FIREBALL, CAST_ICESHOCK, CAST_ROCKFALL, CAST_DARKEDGE, DIE };
 
 // Sprite types
 enum types

@@ -62,8 +62,8 @@ typedef struct ele
     struct ele* next;           // next node
 }* SpriteList;
 
-#define NUM_SPRITES 7           // Number of distinct sprites in the game
-#define NUM_SPELLS 3            // Number of distinct spells in the game
+#define NUM_SPRITES 9           // Number of distinct sprites in the game
+#define NUM_SPELLS 4            // Number of distinct spells in the game
 
 SDL_Texture* spriteSheet;       // Texture containing all sprites
 SpriteList activeSprites;       // Linked list of currently active sprites
@@ -412,6 +412,34 @@ static void collideRockfall(Sprite sp)
     return;
 }
 
+// Action function for launching darkedge (stored as fxn ptr in spellInfo)
+static void launchDarkedge(Sprite sp)
+{
+    // base positions and velocity of spears
+    double x_pos = sp->x_pos - (sp->meta->width / 2) + (sp->direction * (sp->meta->width / 2));
+    double y_pos = sp->y_pos - 45;
+
+    double x_vel = 0.1 * convert(sp->direction);
+    double y_vel = 0.025;
+
+    // Spawn four dark spears above caster
+    for(int i = 0; i < 4; i++)
+    {
+        int angle = (int) (57.296 * atan(y_vel / x_vel));
+        spawnSprite(DARKEDGE, x_pos, y_pos - i*45, x_vel, y_vel, sp->direction, angle, 33);
+    }
+    return;
+}
+
+// Action function for a darkedge collision (stored as fxn ptr in spellInfo)
+static void collideDarkedge(Sprite sp)
+{
+    // Set collided and slow the sprite down
+    collideSpell(sp);
+
+    // TODO: spawn some particles idk
+}
+
 /* PER FRAME UPDATES */
 
 // If a human sprite is ready to launch a casted spell, launch it
@@ -652,10 +680,21 @@ static void moveSprite(Sprite sp)
     {
         case FIREBALL:
             // Fireball accelerates, isn't affected by gravity,
-            if(!sp->colliding) sp->x_vel += convert(sp->x_vel > 0.0f)*0.1;
+            if(!sp->colliding) sp->x_vel += convert(sp->x_vel > 0) * 0.1;
 
             // Fireball faces in the direction of x-velocity (LEFT and RIGHT are in an enum so this works)
             sp->direction = (sp->x_vel >= 0);
+            break;
+
+        case ICESHOCK:
+        case ICESHOCK_P1:
+            // Iceshock is affected by gravity and air resistance
+            if(!sp->colliding) sp->y_vel += 0.3;
+            sp->x_vel += convert(sp->x_vel < 0.0f) * 0.03;
+
+            // Iceshock faces in the direction of xy-velocity
+            sp->direction = (sp->x_vel >= 0);
+            sp->angle = (int) (57.296 * atan(sp->y_vel / sp->x_vel));
             break;
 
         case ROCKFALL:
@@ -676,21 +715,29 @@ static void moveSprite(Sprite sp)
             sp->y_vel += 0.3;
             break;
 
-        case ICESHOCK:
-        case ICESHOCK_P1:
-            // Iceshock is affected by gravity and air resistance
-            if(!sp->colliding) sp->y_vel += 0.3;
-            sp->x_vel += convert(sp->x_vel < 0.0f) * 0.03;
+        case DARKEDGE:
+            // Darkedge accelerates over time and spawns a particle trail
+            if(!sp->colliding && !sp->spawning)
+            {
+                sp->x_vel += convert(sp->x_vel > 0) * 0.2;
+                sp->y_vel += 0.05;
 
-            // Iceshock faces in the direction of xy-velocity
+                // TODO: random chance to spawn particle trail beind it
+            }
+
+            // Darkedge faces in the direction of xy-velocity
             sp->direction = (sp->x_vel >= 0);
             sp->angle = (int) (57.296 * atan(sp->y_vel / sp->x_vel));
+            break;
+
+        case DARKEDGE_P1:
+            // TODO: define movement of particle (wobbly?)
             break;
 
         case GUY:
             // Update x velocity (friction / air resistance)
             if(fabs(sp->x_vel) <= 0.3) sp->x_vel = 0;
-            else                       sp->x_vel += convert(sp->x_vel < 0.0f)*0.15;
+            else                       sp->x_vel += convert(sp->x_vel < 0.0f)*0.1;
 
             // Update y velocity (terminal velocity of 50)
             sp->y_vel = fmin(sp->y_vel + 0.5, 50);
@@ -748,7 +795,7 @@ static void renderBounds(Sprite sp)
     {
         // Line 1
         SDL_Rect box = bounds[i];
-        SDL_Rect clip = {344, 196, box.w, 1};
+        SDL_Rect clip = {739, 77, box.w, 1};
         SDL_Rect renderQuad = {(int)sp->x_pos + box.x, (int)sp->y_pos + box.y, box.w, 1};
         SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
 
@@ -757,7 +804,7 @@ static void renderBounds(Sprite sp)
         SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
 
         // Line 3
-        clip = (SDL_Rect) {344, 196, 1, box.h};
+        clip = (SDL_Rect) {739, 77, 1, box.h};
         renderQuad = (SDL_Rect) {(int)sp->x_pos+ box.x, (int)sp->y_pos + box.y, 1, box.h};
         SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
 
@@ -785,7 +832,7 @@ static void renderSprite(Sprite sp)
     if(debug && sp->meta->type != PARTICLE)
     {
         renderBounds(sp);
-        clip = (SDL_Rect) {366, 67, 3, 3};
+        clip = (SDL_Rect) {743, 81, 3, 3};
         renderQuad = (SDL_Rect) {(int)sp->x_pos, (int)sp->y_pos, 3, 3};
         SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
     }
@@ -805,6 +852,9 @@ void renderSprites()
 // Reflect bounding boxes across the y-axis of a sprite to create lbounds
 static SDL_Rect* reflectBounds(SDL_Rect* rbounds, int num_bounds, int width)
 {
+    // If there are no rbounds, there are no lbounds either
+    if(!rbounds) return NULL;
+
     // Iterate over all given bounds
     SDL_Rect* lbounds = malloc(sizeof(SDL_Rect) * num_bounds);
     double sprite_center = width / 2.0;
@@ -873,16 +923,15 @@ void loadSpriteInfo()
     spell_info[FIREBALL] = initSpell(CAST_FIREBALL, 32, 8, 120, launchFireball, collideSpell);
     spell_info[ICESHOCK] = initSpell(CAST_ICESHOCK, 32, 8, 240, launchIceshock, collideSpell);
     spell_info[ROCKFALL] = initSpell(CAST_ROCKFALL, 40, 40, 360, launchRockfall, collideRockfall);
-    // DARKEDGE - 480 frame CD (8 seconds)
-    // ARCSTORM - 12 seconds?
+    spell_info[DARKEDGE] = initSpell(CAST_DARKEDGE, 32, 8, 480, launchDarkedge, collideDarkedge);
 
     // HUMANS
 
     int numBounds = 2;
 
     // Sprite metadata: Guy
-    int* fs = (int*) malloc(sizeof(int) * 10);
-    memcpy(fs, (int[]) {0, 0, 4, 5, 10, 14, 22, 30, 40, 45}, sizeof(int) * 10);
+    int* fs = (int*) malloc(sizeof(int) * 11);
+    memcpy(fs, (int[]) {0, 0, 4, 5, 10, 14, 22, 30, 40, 48, 53}, sizeof(int) * 11);
     SDL_Rect* bounds = malloc(sizeof(SDL_Rect) * numBounds);
     bounds[0] = (SDL_Rect) {9, 6, 15, 14};
     bounds[1] = (SDL_Rect) {10, 24, 10, 35};
@@ -913,8 +962,42 @@ void loadSpriteInfo()
     bounds[0] = (SDL_Rect) {5, 5, 90, 90};
     sprite_info[ROCKFALL] = initSprite(ROCKFALL, SPELL, 35, 1, 100, 100, 85, fs, numBounds, bounds);
 
-    // TODO: Sprite metadata: Darkedge
-    // TODO: Sprite metadata: Arcstorm
+    // Sprite metadata: Darkedge
+    fs = (int*) malloc(sizeof(int) * 4);
+    memcpy(fs, (int[]) {0, 5, 8, 11}, sizeof(int) * 4);
+    bounds = malloc(sizeof(SDL_Rect) * numBounds);
+    bounds[0] = (SDL_Rect) {5, 11, 50, 9};
+    sprite_info[DARKEDGE] = initSprite(DARKEDGE, SPELL, 25, 1, 60, 30, 215, fs, numBounds, bounds);
+
+    // TODO:
+    // Draw DARKEDGE spawn, move, and collide animations
+    // Draw DARKEDGE_P1 move animation
+    // Draw DARKEDGE spell icon in toolbar
+    // Draw CAST_DARKEDGE animation for GUY
+
+    // Sprite metadata: Arcstorm
+
+    // Increment NUM_SPRITES by 2 and NUM_SPELLS by 1
+    // Add ARCSTORM and ARCSTORM_P1 to sprite enum
+    // Add CAST_ARCSTORM to action enum
+    // Add SDL_SCANCODE in main so guys can cast darkedge
+
+    // Spell info: Cast time, finish time, cooldown, action functions
+    // write arcstorm launch and collide functions
+
+    // Frame sections
+    // Bounding boxes
+    // Sprite info: Power, hp, width, height, sheet position
+    // update GUY frame sections with CAST_ARCSTORM frames
+
+    // Sprite info for the particle
+
+    // define physics for ARCSTORM and ARCSTORM_P1 in moveSprite
+
+    // Draw ARCSTORM spawn, move, and collide animations
+    // Draw ARCSTORM_P1 move animation
+    // Draw ARCSTORM spell icon in toolbar
+    // Draw CAST_ARCSTORM animation for GUY
 
     // PARTICLES
 
@@ -935,6 +1018,11 @@ void loadSpriteInfo()
     fs = (int*) malloc(sizeof(int) * 4);
     memcpy(fs, (int[]) {0, 0, 2, 2}, sizeof(int) * 4);
     sprite_info[ROCKFALL_P2] = initSprite(ROCKFALL_P2, PARTICLE, 0, 1, 5, 5, 210, fs, numBounds, bounds);
+
+    // Sprite metadata: Darkedge Particle 1
+    fs = (int*) malloc(sizeof(int) * 4);
+    memcpy(fs, (int[]) {0, 0, 2, 2}, sizeof(int) * 4);
+    sprite_info[DARKEDGE_P1] = initSprite(DARKEDGE_P1, PARTICLE, 0, 1, 5, 5, 245, fs, numBounds, bounds);
 }
 
 /* DATA UNLOADING */
