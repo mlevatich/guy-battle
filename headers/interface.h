@@ -15,6 +15,9 @@ int hover(int mode, int direction);
 // Change the score
 void setScore(int new_score);
 
+// Add points to score
+void updateScore(int points);
+
 // Render all of the current mode's toolbar and text elements to the screen
 void renderInterface(int mode, long long frame, int guy_hp, int guy2_hp, double* guy_cds, double* guy2_cds);
 

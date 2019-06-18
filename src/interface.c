@@ -83,10 +83,16 @@ int hover(int mode, int direction)
     return ret_val;
 }
 
-// Change the score
+// Reset the score
 void setScore(int new_score)
 {
     score = new_score;
+}
+
+// Add points to the score
+void updateScore(int points)
+{
+    score += points;
 }
 
 /* GETTERS */

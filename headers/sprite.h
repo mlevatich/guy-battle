@@ -45,6 +45,9 @@ bool jump(int guy);
 // Attempt to cast a spell after a keyboard input
 bool cast(int guy, int spell);
 
+// In 1-player mode, process AI decisions
+void takeCPUAction(void);
+
 // Check if its time to spawn new spells, and spawn them, returning the change in score
 void launchSpells(void);
 
@@ -70,7 +73,7 @@ void renderSprites(void);
 void loadSpriteInfo(void);
 
 // Unload any active sprites which have died
-bool unloadSprites(void);
+int unloadSprites(void);
 
 // Destroy all active sprites
 void freeActiveSprites(void);

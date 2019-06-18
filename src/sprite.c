@@ -263,6 +263,27 @@ static bool isDead(Sprite sp)
 
 /* SPRITE EVENTS */
 
+// In 1-player mode, process AI decisions
+void takeCPUAction()
+{
+    // Human player
+    int player = 0;
+    Sprite player_guy = guys[player];
+
+    // Cpu player
+    int cpu = 1;
+    Sprite cpu_guy = guys[cpu];
+
+    // Walk towards player, but maintain a healthy distance
+    if(fabs(cpu_guy->x_pos - player_guy->x_pos) >= 150) walk(cpu, cpu_guy->x_pos < player_guy->x_pos);
+
+    // Randomly jump
+    if(get_rand() <= 0.002) jump(cpu);
+
+    // Randomly cast spells
+    if(get_rand() <= 0.01) cast(cpu, (int) (get_rand() * NUM_SPELLS));
+}
+
 // Attempt to walk in a direction after a keyboard input
 bool walk(int guy, bool direction)
 {
@@ -1039,11 +1060,11 @@ static void freeSprite(struct ele* e)
 }
 
 // Free any active sprites which have died
-bool unloadSprites()
+int unloadSprites()
 {
     // Iterate over active sprites
     struct ele* prev = NULL;
-    bool game_over = false;
+    int game_over = 0;
     for(struct ele* cursor = activeSprites; cursor != NULL;)
     {
         // Check if the sprite is dead
@@ -1052,9 +1073,17 @@ bool unloadSprites()
             if(cursor->sp->meta->id == GUY)
             {
                 // If the dead sprite is a Guy, just hide it and signal game over
-                if(cursor->sp == guys[0]) hideGuy(0);
-                else                      hideGuy(1);
-                game_over = true;
+                if(cursor->sp == guys[0])
+                {
+                    hideGuy(0);
+                    game_over = 1;
+                }
+                else
+                {
+                    hideGuy(1);
+                    game_over = 2;
+                }
+
             }
             else
             {

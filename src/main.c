@@ -86,7 +86,7 @@ void setLevel(int level, int mode)
     switchLevel(level);
     int* starts = getStartingPositions(level);
     resetGuy(0, starts[0], starts[1]);
-    if(mode != AI) resetGuy(1, starts[2], starts[3]);
+    resetGuy(1, starts[2], starts[3]);
 }
 
 // Helper function to reset the game to title screen
@@ -144,9 +144,9 @@ int main(int argc, char** argv)
         if(mode == OPENING && !debug)
         {
             int* starts = getStartingPositions(getLevel());
-            // if(frame == 10) Mix_PlayMusic(main_theme, -1);
-            if(frame == 100) spawnSprite(GUY, starts[0], starts[1]-300, 0, 0, RIGHT, 0, 0);
-            if(frame == 225) spawnSprite(GUY, starts[2], starts[3]-300, 0, 0, LEFT, 0, 0);
+            if(frame == 10) Mix_PlayMusic(main_theme, -1);
+            if(frame == 100) spawnSprite(GUY, starts[0], -100, 0, 0, RIGHT, 0, 0);
+            if(frame == 225) spawnSprite(GUY, starts[2], -100, 0, 0, LEFT, 0, 0);
             if(frame == 375) mode = TITLE;
         }
 
@@ -174,7 +174,6 @@ int main(int argc, char** argv)
                             {
                                 mode = STAGE_SELECT;
                                 vs_or_ai = selection;
-                                if(selection == AI) hideGuy(1);
                             }
                         }
                         else if(key == SDLK_UP)
@@ -274,10 +273,10 @@ int main(int argc, char** argv)
                 if(!succ && keys[SDL_SCANCODE_UP])                                succ = jump(guy);
                 if(!succ && keys[SDL_SCANCODE_LEFT] && !keys[SDL_SCANCODE_RIGHT]) succ = walk(guy, LEFT);
                 if(!succ && keys[SDL_SCANCODE_RIGHT] && !keys[SDL_SCANCODE_LEFT]) succ = walk(guy, RIGHT);
-            }
 
-            // Process ai decisions
-            // no ai yet
+                // Decisions for CPU Guy
+                takeCPUAction();
+            }
 
             // Move the background
             moveBackground();
@@ -295,8 +294,23 @@ int main(int argc, char** argv)
             // Update values on timed sprite variables (spell cooldowns, casting / collision durations, etc)
             advanceTimers();
 
-            // Unload dead sprites and check for game over (game ends if dead sprite is a Guy)
-            if(unloadSprites()) mode = GAME_OVER;
+            // Unload dead sprites and check for dead guys
+            int signal = unloadSprites();
+            if(signal)
+            {
+                // In VS mode, if either guy dies, the game ends. In AI mode, if the cpu guy dies,
+                // a new guy is spawned and play continues.
+                if(mode == VS || signal == 1)
+                {
+                    mode = GAME_OVER;
+                }
+                else
+                {
+                    int* starts = getStartingPositions(getLevel());
+                    resetGuy(1, starts[2], -100);
+                    updateScore(123);
+                }
+            }
 
             // Update the animation frame which is drawn for all sprites
             updateAnimationFrames();
