@@ -80,6 +80,14 @@ SDL_Texture* loadTexture(const char* path)
     return newTexture;
 }
 
+// Helper function to cast a spell and update the score on success
+bool sCast(int guy, int spell)
+{
+    bool succ = cast(guy, spell);
+    if(succ) updateScore(spell + 1);
+    return succ;
+}
+
 // Helper function to set the level and teleport guys
 void setLevel(int level, int mode)
 {
@@ -267,10 +275,10 @@ int main(int argc, char** argv)
             else if(mode == AI)
             {
                 // Input for guy 0
-                if(!succ && keys[SDL_SCANCODE_4])                                 succ = cast(guy, DARKEDGE);
-                if(!succ && keys[SDL_SCANCODE_3])                                 succ = cast(guy, ROCKFALL);
-                if(!succ && keys[SDL_SCANCODE_2])                                 succ = cast(guy, ICESHOCK);
-                if(!succ && keys[SDL_SCANCODE_1])                                 succ = cast(guy, FIREBALL);
+                if(!succ && keys[SDL_SCANCODE_4])                                 succ = sCast(guy, DARKEDGE);
+                if(!succ && keys[SDL_SCANCODE_3])                                 succ = sCast(guy, ROCKFALL);
+                if(!succ && keys[SDL_SCANCODE_2])                                 succ = sCast(guy, ICESHOCK);
+                if(!succ && keys[SDL_SCANCODE_1])                                 succ = sCast(guy, FIREBALL);
                 if(!succ && keys[SDL_SCANCODE_UP])                                succ = jump(guy);
                 if(!succ && keys[SDL_SCANCODE_LEFT] && !keys[SDL_SCANCODE_RIGHT]) succ = walk(guy, LEFT);
                 if(!succ && keys[SDL_SCANCODE_RIGHT] && !keys[SDL_SCANCODE_LEFT]) succ = walk(guy, RIGHT);

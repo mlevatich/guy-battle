@@ -1010,8 +1010,6 @@ void loadSpriteInfo()
 
     // TODO:
     // Walk animation should start walking on first frame, and also just be better
-    // Better AI
-    // Casting spells gives points
 
     // Sprite metadata: Arcstorm
 
