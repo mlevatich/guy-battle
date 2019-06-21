@@ -22,7 +22,7 @@ enum types
 typedef struct sprite* Sprite;
 
 // Spawn (construct) a sprite with the given fields
-void spawnSprite(int id, double x, double y, double xv, double yv, bool dir, int angle, int spawning);
+void spawnSprite(int id, double x, double y, double xv, double yv, bool dir, int angle, int spawning, int life);
 
 // Hide a guy in the top right corner of the map
 void hideGuy(int guy);

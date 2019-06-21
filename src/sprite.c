@@ -48,6 +48,7 @@ struct sprite
     int spawning;               // number of frames left in spawn animation
     int colliding;              // number of frames left in collision
     int casting;                // number of frames left to cast spell
+    int lifetime;               // number of frames before this sprite dies automatically
     int* cooldowns;             // array of spell cooldowns
     int spell;                  // spell currently in use
     int action;                 // which animation is the sprite in (MOVE, JUMP, etc)
@@ -75,7 +76,7 @@ Sprite guys[2] = {NULL, NULL};  // Permanent storage for the guy sprites
 /* SPRITE CONSTRUCTOR */
 
 // Initialize a sprite with its on-screen location and stats
-void spawnSprite(int id, double x, double y, double xv, double yv, bool dir, int angle, int spawning)
+void spawnSprite(int id, double x, double y, double xv, double yv, bool dir, int angle, int spawning, int life)
 {
     // Set sprite fields
     Sprite sp = (Sprite) malloc(sizeof(struct sprite));
@@ -87,6 +88,7 @@ void spawnSprite(int id, double x, double y, double xv, double yv, bool dir, int
     sp->casting = 0;   sp->colliding = 0;
     sp->spell = 0;     sp->spawning = spawning;
     sp->frame = 0;     sp->action = SPAWN;
+    sp->lifetime = life;
 
     // Only human sprites have cooldowns
     sp->cooldowns = NULL;
@@ -258,6 +260,9 @@ static bool isDead(Sprite sp)
     // If a sprite is out of hp and has finished its collision animation, it's dead
     if(sp->hp == 0 && sp->colliding == 1) return 1;
 
+    // If a sprite has run out of lifetime, it's dead
+    if(sp->lifetime == 1) return 1;
+
     return 0;
 }
 
@@ -281,7 +286,7 @@ void takeCPUAction()
     if(get_rand() <= 0.002) jump(cpu);
 
     // Randomly cast spells
-    if(get_rand() <= 0.01) cast(cpu, (int) (get_rand() * NUM_SPELLS));
+    if(get_rand() <= 0.015) cast(cpu, (int) (get_rand() * NUM_SPELLS));
 }
 
 // Attempt to walk in a direction after a keyboard input
@@ -350,7 +355,7 @@ static void launchFireball(Sprite sp)
     double fire_x_vel = convert(sp->direction) * 1;
 
     // Spawn the fireball
-    spawnSprite(FIREBALL, fire_x_pos, sp->y_pos+28, fire_x_vel, 0, sp->direction, 0, 0);
+    spawnSprite(FIREBALL, fire_x_pos, sp->y_pos+28, fire_x_vel, 0, sp->direction, 0, 0, 0);
 }
 
 // Action function for launching an iceshock (stored as fxn ptr in spellInfo)
@@ -383,14 +388,14 @@ static void launchIceshock(Sprite sp)
         double ice_ypos = sp->y_pos-y_dist;
 
         // Spawn one missile and four small particles around it
-        spawnSprite(ICESHOCK, ice_xpos, ice_ypos, side * x_speed, y_speed, direction, angle, 0);
+        spawnSprite(ICESHOCK, ice_xpos, ice_ypos, side * x_speed, y_speed, direction, angle, 0, 0);
         for(int j = 0; j < 4; j++)
         {
             double ptc_x = ice_xpos + (get_rand() - 0.5) * 10;
             double ptc_y = ice_ypos + (get_rand() - 0.5) * 10;
             double ptc_xv = side * (x_speed * get_rand() + 2);
             double ptc_yv = y_speed * get_rand() - x_speed;
-            spawnSprite(ICESHOCK_P1, ptc_x, ptc_y, ptc_xv, ptc_yv, direction, 0, 0);
+            spawnSprite(ICESHOCK_P1, ptc_x, ptc_y, ptc_xv, ptc_yv, direction, 0, 0, 0);
         }
     }
 }
@@ -408,7 +413,7 @@ static void launchRockfall(Sprite sp)
     int y = other_guy->y_pos - 250;
 
     // Spawn the rock
-    spawnSprite(ROCKFALL, x, y, 0, -1, RIGHT, 0, 20);
+    spawnSprite(ROCKFALL, x, y, 0, -1, RIGHT, 0, 20, 0);
 }
 
 // Action function for a rockfall collision (stored as fxn ptr in spellInfo)
@@ -426,9 +431,9 @@ static void collideRockfall(Sprite sp)
         double xv = x_dir * sp->y_vel;
         double yv = sp->y_vel * -2;
         int a = get_rand();
-        spawnSprite(ROCKFALL_P1, x+(get_rand()-0.5)*40, y, xv + x_dir*5*get_rand(), yv-7*get_rand(), 0, a, 0);
-        spawnSprite(ROCKFALL_P2, x+(get_rand()-0.5)*40, y, xv + x_dir*5*get_rand(), yv-7*get_rand(), 0, a, 0);
-        spawnSprite(ROCKFALL_P2, x+(get_rand()-0.5)*40, y, xv + x_dir*5*get_rand(), yv-7*get_rand(), 0, a, 0);
+        spawnSprite(ROCKFALL_P1, x+(get_rand()-0.5)*40, y, xv + x_dir*5*get_rand(), yv-7*get_rand(), 0, a, 0, 0);
+        spawnSprite(ROCKFALL_P2, x+(get_rand()-0.5)*40, y, xv + x_dir*5*get_rand(), yv-7*get_rand(), 0, a, 0, 0);
+        spawnSprite(ROCKFALL_P2, x+(get_rand()-0.5)*40, y, xv + x_dir*5*get_rand(), yv-7*get_rand(), 0, a, 0, 0);
     }
     return;
 }
@@ -447,18 +452,9 @@ static void launchDarkedge(Sprite sp)
     for(int i = 0; i < 4; i++)
     {
         int angle = (int) (57.296 * atan(y_vel / x_vel));
-        spawnSprite(DARKEDGE, x_pos, y_pos - i*45, x_vel, y_vel, sp->direction, angle, 33);
+        spawnSprite(DARKEDGE, x_pos, y_pos - i*45, x_vel, y_vel, sp->direction, angle, 33, 0);
     }
     return;
-}
-
-// Action function for a darkedge collision (stored as fxn ptr in spellInfo)
-static void collideDarkedge(Sprite sp)
-{
-    // Set collided and slow the sprite down
-    collideSpell(sp);
-
-    // TODO: spawn some particles idk
 }
 
 /* PER FRAME UPDATES */
@@ -743,7 +739,16 @@ static void moveSprite(Sprite sp)
                 sp->x_vel += convert(sp->x_vel > 0) * 0.2;
                 sp->y_vel += 0.05;
 
-                // TODO: random chance to spawn particle trail beind it
+                // Darkedge spawns many particles randomly behind it, giving the appearance of
+                // a particle trail
+                if(get_rand() <= fabs(sp->x_vel) * 0.1)
+                {
+                    double x = sp->x_pos + (!sp->direction * 60);
+                    double y = sp->y_pos + (get_rand() - 0.2) * 20;
+                    double xv = (0.5 * sp->x_vel) + (get_rand() - 0.5) / 2;
+                    double yv = (0.5 * sp->y_vel) + (get_rand() - 0.5) / 2;
+                    spawnSprite(DARKEDGE_P1, x, y, xv, yv, RIGHT, 0, 0, 10);
+                }
             }
 
             // Darkedge faces in the direction of xy-velocity
@@ -752,7 +757,13 @@ static void moveSprite(Sprite sp)
             break;
 
         case DARKEDGE_P1:
-            // TODO: define movement of particle (wobbly?)
+            // Darkedge particles wobble around randomly
+            if(get_rand() <= 0.05)
+            {
+                sp->x_vel = (get_rand() - 0.5) / 2;
+                sp->y_vel = (get_rand() - 0.5) / 2;
+            }
+            sp->angle += 5;
             break;
 
         case GUY:
@@ -795,6 +806,9 @@ static void advanceTime(Sprite sp)
 
     // Update collision time
     if(sp->colliding) sp->colliding--;
+
+    // Update sprite lifetime
+    if(sp->lifetime) sp->lifetime--;
 }
 
 // Advance timed sprite variables which update every frame
@@ -944,7 +958,7 @@ void loadSpriteInfo()
     spell_info[FIREBALL] = initSpell(CAST_FIREBALL, 32, 8, 120, launchFireball, collideSpell);
     spell_info[ICESHOCK] = initSpell(CAST_ICESHOCK, 32, 8, 240, launchIceshock, collideSpell);
     spell_info[ROCKFALL] = initSpell(CAST_ROCKFALL, 40, 40, 360, launchRockfall, collideRockfall);
-    spell_info[DARKEDGE] = initSpell(CAST_DARKEDGE, 44, 24, 480, launchDarkedge, collideDarkedge);
+    spell_info[DARKEDGE] = initSpell(CAST_DARKEDGE, 44, 24, 480, launchDarkedge, collideSpell);
 
     // HUMANS
 
@@ -991,11 +1005,7 @@ void loadSpriteInfo()
     sprite_info[DARKEDGE] = initSprite(DARKEDGE, SPELL, 25, 1, 60, 30, 215, fs, numBounds, bounds);
 
     // TODO:
-    // Sprite Lifetime
-    // Darkedge particle effects
-
     // Walk animation should start walking on first frame, and also just be better
-
     // Tweaks for AI, 1-player mode, wrap that up
 
     // Sprite metadata: Arcstorm

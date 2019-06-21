@@ -126,8 +126,8 @@ int main(int argc, char** argv)
     if(debug)
     {
         int* starts = getStartingPositions(getLevel());
-        spawnSprite(GUY, starts[0], starts[1], 0, 0, RIGHT, 0, 0);
-        spawnSprite(GUY, starts[2], starts[3], 0, 0, LEFT, 0, 0);
+        spawnSprite(GUY, starts[0], starts[1], 0, 0, RIGHT, 0, 0, 0);
+        spawnSprite(GUY, starts[2], starts[3], 0, 0, LEFT, 0, 0, 0);
         mode = TITLE;
     }
 
@@ -145,8 +145,8 @@ int main(int argc, char** argv)
         {
             int* starts = getStartingPositions(getLevel());
             if(frame == 10) Mix_PlayMusic(main_theme, -1);
-            if(frame == 100) spawnSprite(GUY, starts[0], -100, 0, 0, RIGHT, 0, 0);
-            if(frame == 225) spawnSprite(GUY, starts[2], -100, 0, 0, LEFT, 0, 0);
+            if(frame == 100) spawnSprite(GUY, starts[0], -100, 0, 0, RIGHT, 0, 0, 0);
+            if(frame == 225) spawnSprite(GUY, starts[2], -100, 0, 0, LEFT, 0, 0, 0);
             if(frame == 375) mode = TITLE;
         }
 
