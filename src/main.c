@@ -223,7 +223,8 @@ int main(int argc, char** argv)
                         if(key == SDLK_ESCAPE || key == SDLK_RETURN) mode = AI;
                         break;
 
-                    case GAME_OVER:
+                    case GAME_OVER_VS:
+                    case GAME_OVER_AI:
                         // Hit esc or enter to return to the title screen
                         if(key == SDLK_ESCAPE || key == SDLK_RETURN) resetGame(&mode, &selection, &vs_or_ai);
                         break;
@@ -300,10 +301,8 @@ int main(int argc, char** argv)
             {
                 // In VS mode, if either guy dies, the game ends. In AI mode, if the cpu guy dies,
                 // a new guy is spawned and play continues.
-                if(mode == VS || signal == 1)
-                {
-                    mode = GAME_OVER;
-                }
+                if(mode == VS) mode = GAME_OVER_VS;
+                else if (signal == 1) mode = GAME_OVER_AI;
                 else
                 {
                     int* starts = getStartingPositions(getLevel());

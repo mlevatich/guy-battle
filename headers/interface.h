@@ -7,7 +7,7 @@
 
 // List of game states
 enum modes
-{ OPENING, TITLE, CONTROLS, STAGE_SELECT, VS, AI, PAUSE, GAME_OVER };
+{ OPENING, TITLE, CONTROLS, STAGE_SELECT, VS, AI, PAUSE, GAME_OVER_VS, GAME_OVER_AI };
 
 // Move the text selection arrow
 int hover(int mode, int direction);

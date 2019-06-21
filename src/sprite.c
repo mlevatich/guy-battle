@@ -437,7 +437,7 @@ static void collideRockfall(Sprite sp)
 static void launchDarkedge(Sprite sp)
 {
     // base positions and velocity of spears
-    double x_pos = sp->x_pos - (sp->meta->width / 2) + (sp->direction * (sp->meta->width / 2));
+    double x_pos = sp->x_pos - (!sp->direction * 33);
     double y_pos = sp->y_pos - 45;
 
     double x_vel = 0.1 * convert(sp->direction);
@@ -609,7 +609,7 @@ static void terrainCollision(Sprite sp, int* platforms, int* walls)
 
         case SPELL:
             // Spells collide with ground and walls
-            if(!sp->colliding && (on_ground || touching_wall != -1))
+            if(!sp->colliding && !sp->spawning && (on_ground || touching_wall != -1))
             {
                 // Spells have specialized collision handlers
                 spell_info[sp->meta->id]->on_collide(sp);
@@ -701,7 +701,7 @@ static void moveSprite(Sprite sp)
     {
         case FIREBALL:
             // Fireball accelerates, isn't affected by gravity,
-            if(!sp->colliding) sp->x_vel += convert(sp->x_vel > 0) * 0.1;
+            if(!sp->colliding) sp->x_vel += convert(sp->x_vel > 0) * 0.15;
 
             // Fireball faces in the direction of x-velocity (LEFT and RIGHT are in an enum so this works)
             sp->direction = (sp->x_vel >= 0);
@@ -944,7 +944,7 @@ void loadSpriteInfo()
     spell_info[FIREBALL] = initSpell(CAST_FIREBALL, 32, 8, 120, launchFireball, collideSpell);
     spell_info[ICESHOCK] = initSpell(CAST_ICESHOCK, 32, 8, 240, launchIceshock, collideSpell);
     spell_info[ROCKFALL] = initSpell(CAST_ROCKFALL, 40, 40, 360, launchRockfall, collideRockfall);
-    spell_info[DARKEDGE] = initSpell(CAST_DARKEDGE, 32, 8, 480, launchDarkedge, collideDarkedge);
+    spell_info[DARKEDGE] = initSpell(CAST_DARKEDGE, 44, 24, 480, launchDarkedge, collideDarkedge);
 
     // HUMANS
 
@@ -952,7 +952,7 @@ void loadSpriteInfo()
 
     // Sprite metadata: Guy
     int* fs = (int*) malloc(sizeof(int) * 11);
-    memcpy(fs, (int[]) {0, 0, 4, 5, 10, 14, 22, 30, 40, 48, 53}, sizeof(int) * 11);
+    memcpy(fs, (int[]) {0, 0, 4, 5, 10, 14, 22, 30, 40, 51, 56}, sizeof(int) * 11);
     SDL_Rect* bounds = malloc(sizeof(SDL_Rect) * numBounds);
     bounds[0] = (SDL_Rect) {9, 6, 15, 14};
     bounds[1] = (SDL_Rect) {10, 24, 10, 35};
@@ -991,17 +991,19 @@ void loadSpriteInfo()
     sprite_info[DARKEDGE] = initSprite(DARKEDGE, SPELL, 25, 1, 60, 30, 215, fs, numBounds, bounds);
 
     // TODO:
-    // Draw DARKEDGE spawn, move, and collide animations
-    // Draw DARKEDGE_P1 move animation
-    // Draw DARKEDGE spell icon in toolbar
-    // Draw CAST_DARKEDGE animation for GUY
+    // Sprite Lifetime
+    // Darkedge particle effects
+
+    // Walk animation should start walking on first frame, and also just be better
+
+    // Tweaks for AI, 1-player mode, wrap that up
 
     // Sprite metadata: Arcstorm
 
     // Increment NUM_SPRITES by 2 and NUM_SPELLS by 1
     // Add ARCSTORM and ARCSTORM_P1 to sprite enum
     // Add CAST_ARCSTORM to action enum
-    // Add SDL_SCANCODE in main so guys can cast darkedge
+    // Add SDL_SCANCODE in main so guys can cast arcstorm
 
     // Spell info: Cast time, finish time, cooldown, action functions
     // write arcstorm launch and collide functions

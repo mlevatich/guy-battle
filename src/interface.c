@@ -344,10 +344,20 @@ void renderInterface(int mode, long long frame, int guy1_hp, int guy2_hp, double
             break;
         }
 
-        case GAME_OVER:
+        case GAME_OVER_VS:
         {
             renderText("GAME OVER", x, 280, C, alpha_max);
             break;
+        }
+
+        case GAME_OVER_AI:
+        {
+            int y = 280;
+            char* score_string = stringScore(score);
+            renderText("GAME OVER",  x,       y,            C, alpha_max);
+            renderText("SCORE",      x - 100, y + 2*margin, C, alpha_max);
+            renderText(score_string, x + 80,  y + 2*margin, C, alpha_max);
+            free(score_string);
         }
     }
     free(guy1_cds);
