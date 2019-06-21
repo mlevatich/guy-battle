@@ -280,10 +280,14 @@ void takeCPUAction()
     Sprite cpu_guy = guys[cpu];
 
     // Walk towards player, but maintain a healthy distance
-    if(fabs(cpu_guy->x_pos - player_guy->x_pos) >= 150) walk(cpu, cpu_guy->x_pos < player_guy->x_pos);
+    int towards_player = cpu_guy->x_pos < player_guy->x_pos;
+    if(fabs(cpu_guy->x_pos - player_guy->x_pos) >= 150) walk(cpu, towards_player);
+
+    // Generally face the player
+    if(cpu_guy->action == IDLE) cpu_guy->direction = towards_player;
 
     // Randomly jump
-    if(get_rand() <= 0.002) jump(cpu);
+    if(get_rand() <= 0.003) jump(cpu);
 
     // Randomly cast spells
     if(get_rand() <= 0.015) cast(cpu, (int) (get_rand() * NUM_SPELLS));
@@ -716,7 +720,7 @@ static void moveSprite(Sprite sp)
 
         case ROCKFALL:
             // Rockfall falls quickly after it's done spawning
-            if(!sp->colliding && !sp->spawning) sp->y_vel += 1.5;
+            if(!sp->colliding && !sp->spawning) sp->y_vel += 1.2;
 
             // Rockfall rotates slowly as it falls
             sp->direction = (sp->x_vel >= 0);
@@ -1006,7 +1010,8 @@ void loadSpriteInfo()
 
     // TODO:
     // Walk animation should start walking on first frame, and also just be better
-    // Tweaks for AI, 1-player mode, wrap that up
+    // Better AI
+    // Casting spells gives points
 
     // Sprite metadata: Arcstorm
 
