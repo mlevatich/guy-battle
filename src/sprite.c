@@ -63,8 +63,8 @@ typedef struct ele
     struct ele* next;           // next node
 }* SpriteList;
 
-#define NUM_SPRITES 9           // Number of distinct sprites in the game
-#define NUM_SPELLS 4            // Number of distinct spells in the game
+#define NUM_SPRITES 12          // Number of distinct sprites in the game
+#define NUM_SPELLS 5            // Number of distinct spells in the game
 
 SDL_Texture* spriteSheet;       // Texture containing all sprites
 SpriteList activeSprites;       // Linked list of currently active sprites
@@ -342,24 +342,18 @@ bool cast(int guy, int spell)
     return 0;
 }
 
-// Generic actions for when any spell collides with something (always slows down and dies)
-static void collideSpell(Sprite sp)
-{
-    sp->colliding = 20;
-    sp->hp = 0;
-    sp->x_vel *= 0.05;
-    sp->y_vel *= 0.05;
-}
-
 // Action function for launching a fireball (stored as fxn ptr in spellInfo)
 static void launchFireball(Sprite sp)
 {
     // Starting position and velocity of the fireball
-    double fire_x_pos = sp->x_pos + convert(sp->direction) * 20;
-    double fire_x_vel = convert(sp->direction) * 1;
+    double x = sp->x_pos;
+    double y = sp->y_pos + 28;
+    double xv = convert(sp->direction) * 1;
+    if(sp->direction == RIGHT) x += sp->meta->width - 4;
+    else                       x -= sprite_info[FIREBALL]->width - 4;
 
     // Spawn the fireball
-    spawnSprite(FIREBALL, fire_x_pos, sp->y_pos+28, fire_x_vel, 0, sp->direction, 0, 0, 0);
+    spawnSprite(FIREBALL, x, y, xv, 0, sp->direction, 0, 0, 0);
 }
 
 // Action function for launching an iceshock (stored as fxn ptr in spellInfo)
@@ -420,28 +414,6 @@ static void launchRockfall(Sprite sp)
     spawnSprite(ROCKFALL, x, y, 0, -1, RIGHT, 0, 20, 0);
 }
 
-// Action function for a rockfall collision (stored as fxn ptr in spellInfo)
-static void collideRockfall(Sprite sp)
-{
-    // Set collided and slow the sprite down
-    collideSpell(sp);
-
-    // Spawn particles
-    for(int i = 0; i < 8; i++)
-    {
-        int x_dir = convert(i < 4);
-        double x = xCenter(sp);
-        double y = yCenter(sp);
-        double xv = x_dir * sp->y_vel;
-        double yv = sp->y_vel * -2;
-        int a = get_rand();
-        spawnSprite(ROCKFALL_P1, x+(get_rand()-0.5)*40, y, xv + x_dir*5*get_rand(), yv-7*get_rand(), 0, a, 0, 0);
-        spawnSprite(ROCKFALL_P2, x+(get_rand()-0.5)*40, y, xv + x_dir*5*get_rand(), yv-7*get_rand(), 0, a, 0, 0);
-        spawnSprite(ROCKFALL_P2, x+(get_rand()-0.5)*40, y, xv + x_dir*5*get_rand(), yv-7*get_rand(), 0, a, 0, 0);
-    }
-    return;
-}
-
 // Action function for launching darkedge (stored as fxn ptr in spellInfo)
 static void launchDarkedge(Sprite sp)
 {
@@ -458,7 +430,63 @@ static void launchDarkedge(Sprite sp)
         int angle = (int) (57.296 * atan(y_vel / x_vel));
         spawnSprite(DARKEDGE, x_pos, y_pos - i*45, x_vel, y_vel, sp->direction, angle, 33, 0);
     }
-    return;
+}
+
+// Action function for launching arcsurge (stored as fxn ptr in spellInfo)
+static void launchArcsurge(Sprite sp)
+{
+    // Position of the lightning bolt
+    double x = sp->x_pos;
+    double y = sp->y_pos - 1;
+    if(sp->direction == RIGHT) x += sp->meta->width - 6;
+    else                       x -= sprite_info[ARCSURGE]->width - 6;
+
+    // Caster is blown back by the launch
+    sp->x_vel = -6 * convert(sp->direction);
+
+    // Spawn lightning next to sprite, on the side the sprite is facing
+    spawnSprite(ARCSURGE, x, y, 0, 0, sp->direction, 0, 0, 20);
+
+    // Particles shoot out in the direction the spell was cast
+    double p_x = x + (sp->direction * sprite_info[ARCSURGE]->width);
+    double p_y = y + sprite_info[ARCSURGE]->height / 2;
+    for(int i = 0; i < 30; i++)
+    {
+        double top_speed = 5;
+        double p_xv = (1 + get_rand()) * 3.5 * convert(sp->direction);
+        double p_yv = (top_speed - fabs(p_xv)) * ((get_rand() - 0.5) * 2);
+        spawnSprite(ARCSURGE_P1, p_x, p_y, p_xv, p_yv, sp->direction, 0, 0, 10 + get_rand() * 20);
+    }
+}
+
+// Generic actions for when any spell collides with something (always slows down and dies)
+static void collideGeneric(Sprite sp)
+{
+    sp->colliding = 20;
+    sp->hp = 0;
+    sp->x_vel *= 0.05;
+    sp->y_vel *= 0.05;
+}
+
+// Action function for a rockfall collision (stored as fxn ptr in spellInfo)
+static void collideRockfall(Sprite sp)
+{
+    // Set collided and slow the sprite down
+    collideGeneric(sp);
+
+    // Spawn particles
+    for(int i = 0; i < 8; i++)
+    {
+        int x_dir = convert(i < 4);
+        double x = xCenter(sp);
+        double y = yCenter(sp);
+        double xv = x_dir * sp->y_vel;
+        double yv = sp->y_vel * -2;
+        int a = get_rand();
+        spawnSprite(ROCKFALL_P1, x+(get_rand()-0.5)*40, y, xv + x_dir*5*get_rand(), yv-7*get_rand(), 0, a, 0, 0);
+        spawnSprite(ROCKFALL_P2, x+(get_rand()-0.5)*40, y, xv + x_dir*5*get_rand(), yv-7*get_rand(), 0, a, 0, 0);
+        spawnSprite(ROCKFALL_P2, x+(get_rand()-0.5)*40, y, xv + x_dir*5*get_rand(), yv-7*get_rand(), 0, a, 0, 0);
+    }
 }
 
 /* PER FRAME UPDATES */
@@ -531,12 +559,16 @@ static void applyCollision(Sprite sp, Sprite other)
     // All sprites take damage from collisions
     sp->hp = fmax(0, sp->hp - other->meta->power);
 
-    // Get which direction the collision is coming from
-    int direction = convert(xCenter(other) > xCenter(sp));
-
     // Humans are knocked back by collisions, and spellcasts are cancelled
     if(sp->meta->type == HUMANOID)
     {
+        // Get which direction the collision is coming from
+        int direction = convert(xCenter(other) > xCenter(sp));
+
+        // Special case: Arcsurge always hits target in the direction that it is cast
+        if(other->meta->id == ARCSURGE) direction = convert(!other->direction);
+
+        // Apply collision
         sp->colliding = 20;
         sp->x_vel = -5 * direction;
         sp->y_vel = -3;
@@ -661,7 +693,7 @@ static void updateAnimationFrame(Sprite sp)
     // Sprite proceeds through animation frames faster during certain actions
     int a = sp->action;
     double increment = ANIMATION_SPEED * 0.1;
-    if(a == JUMP || a == COLLIDE || a == SPAWN) increment *= 1.5;
+    if(a == JUMP || a == COLLIDE || a == SPAWN || sp->meta->id == ARCSURGE) increment *= 1.5;
     if(a >= CAST_FIREBALL) increment *= 2.5;
     sp->frame += increment;
 
@@ -699,9 +731,30 @@ static void moveSprite(Sprite sp)
     // Update the sprite's velocity and orientation (the physics are different for different spells)
     switch(sp->meta->id)
     {
+        case GUY:
+            // Update x velocity (friction / air resistance)
+            if(fabs(sp->x_vel) <= 0.3) sp->x_vel = 0;
+            else                       sp->x_vel += convert(sp->x_vel < 0.0f)*0.1;
+
+            // Update y velocity (terminal velocity of 50)
+            sp->y_vel = fmin(sp->y_vel + 0.5, 50);
+            break;
+
         case FIREBALL:
-            // Fireball accelerates, isn't affected by gravity,
-            if(!sp->colliding) sp->x_vel += convert(sp->x_vel > 0) * 0.15;
+            // Fireball accelerates over time and spawns a particle trail
+            if(!sp->colliding)
+            {
+                sp->x_vel += convert(sp->x_vel > 0) * 0.15;
+
+                if(get_rand() <= fabs(sp->x_vel) * 0.09)
+                {
+                    double x = sp->x_pos + (!sp->direction * 15);
+                    double y = sp->y_pos + (get_rand() - 0.2) * 10;
+                    double xv = (0.5 * sp->x_vel) + (get_rand() - 0.5) / 2;
+                    double yv = (0.5 * sp->y_vel) + (get_rand() - 0.5) / 2;
+                    spawnSprite(FIREBALL_P1, x, y, xv, yv, RIGHT, 0, 0, 10);
+                }
+            }
 
             // Fireball faces in the direction of x-velocity (LEFT and RIGHT are in an enum so this works)
             sp->direction = (sp->x_vel >= 0);
@@ -743,8 +796,6 @@ static void moveSprite(Sprite sp)
                 sp->x_vel += convert(sp->x_vel > 0) * 0.2;
                 sp->y_vel += 0.05;
 
-                // Darkedge spawns many particles randomly behind it, giving the appearance of
-                // a particle trail
                 if(get_rand() <= fabs(sp->x_vel) * 0.1)
                 {
                     double x = sp->x_pos + (!sp->direction * 60);
@@ -761,22 +812,32 @@ static void moveSprite(Sprite sp)
             break;
 
         case DARKEDGE_P1:
-            // Darkedge particles wobble around randomly
+        case FIREBALL_P1:
+            // Darkedge/Fireball particles wobble around randomly
             if(get_rand() <= 0.05)
             {
                 sp->x_vel = (get_rand() - 0.5) / 2;
                 sp->y_vel = (get_rand() - 0.5) / 2;
             }
-            sp->angle += 5;
             break;
 
-        case GUY:
-            // Update x velocity (friction / air resistance)
-            if(fabs(sp->x_vel) <= 0.3) sp->x_vel = 0;
-            else                       sp->x_vel += convert(sp->x_vel < 0.0f)*0.1;
+        case ARCSURGE:
+            // The electric shock of Arcsurge doesn't move
+            break;
 
-            // Update y velocity (terminal velocity of 50)
-            sp->y_vel = fmin(sp->y_vel + 0.5, 50);
+        case ARCSURGE_P1:
+            // Arcsurge particles randomly change direction
+            if(get_rand() <= 0.2)
+            {
+                double tmp = fabs(sp->x_vel) * convert(get_rand() - 0.5 > 0);
+                sp->x_vel = sp->y_vel;
+                sp->y_vel = tmp;
+                sp->x_vel += (get_rand() - 0.5)*3;
+            }
+
+            // Arcsurge particles slow down heavily but do not fall
+            sp->x_vel += convert(sp->x_vel < 0) * 0.1;
+            sp->y_vel += convert(sp->y_vel < 0) * 0.1;
             break;
     }
 }
@@ -958,19 +1019,13 @@ void loadSpriteInfo()
     sprite_info = (SpriteInfo*) malloc(sizeof(SpriteInfo)*NUM_SPRITES);
     spell_info =(SpellInfo*) malloc(sizeof(SpellInfo)*NUM_SPELLS);
 
-    // Initialize meta info for spells
-    spell_info[FIREBALL] = initSpell(CAST_FIREBALL, 32, 8, 120, launchFireball, collideSpell);
-    spell_info[ICESHOCK] = initSpell(CAST_ICESHOCK, 32, 8, 240, launchIceshock, collideSpell);
-    spell_info[ROCKFALL] = initSpell(CAST_ROCKFALL, 40, 40, 360, launchRockfall, collideRockfall);
-    spell_info[DARKEDGE] = initSpell(CAST_DARKEDGE, 44, 24, 480, launchDarkedge, collideSpell);
-
     // HUMANS
 
     int numBounds = 2;
 
     // Sprite metadata: Guy
-    int* fs = (int*) malloc(sizeof(int) * 11);
-    memcpy(fs, (int[]) {0, 0, 4, 5, 10, 14, 22, 30, 40, 51, 56}, sizeof(int) * 11);
+    int* fs = (int*) malloc(sizeof(int) * 12);
+    memcpy(fs, (int[]) {0, 0, 4, 5, 10, 14, 22, 30, 40, 51, 59, 64}, sizeof(int) * 12);
     SDL_Rect* bounds = malloc(sizeof(SDL_Rect) * numBounds);
     bounds[0] = (SDL_Rect) {9, 6, 15, 14};
     bounds[1] = (SDL_Rect) {10, 24, 10, 35};
@@ -980,67 +1035,57 @@ void loadSpriteInfo()
 
     numBounds = 1;
 
-    // Sprite metadata: Fireball
+    // Sprite/Spell metadata: Fireball
     fs = (int*) malloc(sizeof(int) * 4);
     memcpy(fs, (int[]) {0, 0, 2, 5}, sizeof(int) * 4);
     bounds = malloc(sizeof(SDL_Rect) * numBounds);
     bounds[0] = (SDL_Rect) {6, 2, 12, 6};
+    spell_info[FIREBALL] = initSpell(CAST_FIREBALL, 32, 8, 120, launchFireball, collideGeneric);
     sprite_info[FIREBALL] = initSprite(FIREBALL, SPELL, 15, 1, 23, 10, 60, fs, numBounds, bounds);
 
-    // Sprite metadata: Iceshock
+    // Sprite/Spell metadata: Iceshock
     fs = (int*) malloc(sizeof(int) * 4);
     memcpy(fs, (int[]) {0, 0, 2, 5}, sizeof(int) * 4);
     bounds = malloc(sizeof(SDL_Rect) * numBounds);
     bounds[0] = (SDL_Rect) {6, 1, 13, 7};
-    sprite_info[ICESHOCK] = initSprite(ICESHOCK, SPELL, 25, 1, 23, 10, 70, fs, numBounds, bounds);
+    spell_info[ICESHOCK] = initSpell(CAST_ICESHOCK, 32, 8, 240, launchIceshock, collideGeneric);
+    sprite_info[ICESHOCK] = initSprite(ICESHOCK, SPELL, 20, 1, 23, 10, 70, fs, numBounds, bounds);
 
-    // Sprite metadata: Rockfall
+    // Sprite/Spell metadata: Rockfall
     fs = (int*) malloc(sizeof(int) * 4);
     memcpy(fs, (int[]) {0, 3, 4, 7}, sizeof(int) * 4);
     bounds = malloc(sizeof(SDL_Rect) * numBounds);
     bounds[0] = (SDL_Rect) {5, 5, 90, 90};
-    sprite_info[ROCKFALL] = initSprite(ROCKFALL, SPELL, 35, 1, 100, 100, 85, fs, numBounds, bounds);
+    spell_info[ROCKFALL] = initSpell(CAST_ROCKFALL, 40, 40, 360, launchRockfall, collideRockfall);
+    sprite_info[ROCKFALL] = initSprite(ROCKFALL, SPELL, 30, 1, 100, 100, 85, fs, numBounds, bounds);
 
-    // Sprite metadata: Darkedge
+    // Sprite/Spell metadata: Darkedge
     fs = (int*) malloc(sizeof(int) * 4);
     memcpy(fs, (int[]) {0, 5, 8, 11}, sizeof(int) * 4);
     bounds = malloc(sizeof(SDL_Rect) * numBounds);
     bounds[0] = (SDL_Rect) {5, 11, 50, 9};
+    spell_info[DARKEDGE] = initSpell(CAST_DARKEDGE, 44, 24, 480, launchDarkedge, collideGeneric);
     sprite_info[DARKEDGE] = initSprite(DARKEDGE, SPELL, 25, 1, 60, 30, 215, fs, numBounds, bounds);
 
-    // TODO:
-    // Walk animation should start walking on first frame, and also just be better
-
-    // Sprite metadata: Arcstorm
-
-    // Increment NUM_SPRITES by 2 and NUM_SPELLS by 1
-    // Add ARCSTORM and ARCSTORM_P1 to sprite enum
-    // Add CAST_ARCSTORM to action enum
-    // Add SDL_SCANCODE in main so guys can cast arcstorm
-
-    // Spell info: Cast time, finish time, cooldown, action functions
-    // write arcstorm launch and collide functions
-
-    // Frame sections
-    // Bounding boxes
-    // Sprite info: Power, hp, width, height, sheet position
-    // update GUY frame sections with CAST_ARCSTORM frames
-
-    // Sprite info for the particle
-
-    // define physics for ARCSTORM and ARCSTORM_P1 in moveSprite
-
-    // Draw ARCSTORM spawn, move, and collide animations
-    // Draw ARCSTORM_P1 move animation
-    // Draw ARCSTORM spell icon in toolbar
-    // Draw CAST_ARCSTORM animation for GUY
+    // Sprite/Spell metadata: Arcsurge
+    fs = (int*) malloc(sizeof(int) * 4);
+    memcpy(fs, (int[]) {0, 0, 3, 6}, sizeof(int) * 4);
+    bounds = malloc(sizeof(SDL_Rect) * numBounds);
+    bounds[0] = (SDL_Rect) {10, 7, 100, 45};
+    spell_info[ARCSURGE] = initSpell(CAST_ARCSURGE, 32, 20, 600, launchArcsurge, collideGeneric);
+    sprite_info[ARCSURGE] = initSprite(ARCSURGE, SPELL, 35, 1, 120, 60, 250, fs, numBounds, bounds);
 
     // PARTICLES
 
     numBounds = 0;
     bounds = NULL;
 
-    // Sprite metadata: Iceshock Particle
+    // Sprite metadata: Fireball Particle 1
+    fs = (int*) malloc(sizeof(int) * 4);
+    memcpy(fs, (int[]) {0, 0, 2, 2}, sizeof(int) * 4);
+    sprite_info[FIREBALL_P1] = initSprite(FIREBALL_P1, PARTICLE, 0, 1, 5, 5, 315, fs, numBounds, bounds);
+
+    // Sprite metadata: Iceshock Particle 1
     fs = (int*) malloc(sizeof(int) * 4);
     memcpy(fs, (int[]) {0, 0, 2, 2}, sizeof(int) * 4);
     sprite_info[ICESHOCK_P1] = initSprite(ICESHOCK_P1, PARTICLE, 0, 1, 5, 5, 80, fs, numBounds, bounds);
@@ -1059,6 +1104,11 @@ void loadSpriteInfo()
     fs = (int*) malloc(sizeof(int) * 4);
     memcpy(fs, (int[]) {0, 0, 2, 2}, sizeof(int) * 4);
     sprite_info[DARKEDGE_P1] = initSprite(DARKEDGE_P1, PARTICLE, 0, 1, 5, 5, 245, fs, numBounds, bounds);
+
+    // Sprite metadata: Arcsurge Particle 1
+    fs = (int*) malloc(sizeof(int) * 4);
+    memcpy(fs, (int[]) {0, 0, 2, 2}, sizeof(int) * 4);
+    sprite_info[ARCSURGE_P1] = initSprite(ARCSURGE_P1, PARTICLE, 0, 1, 5, 5, 310, fs, numBounds, bounds);
 }
 
 /* DATA UNLOADING */

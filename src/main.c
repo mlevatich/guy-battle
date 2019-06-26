@@ -3,6 +3,21 @@
 #include "../headers/level.h"
 #include "../headers/interface.h"
 
+// TODOS
+
+// Velocity buffer in touchingWall()
+// Draw CAST_ARCSURGE animation for GUY (make sure numbers match up too)
+// Draw ARCSURGE move frames
+// Draw ARCSURGE spell icon in toolbar
+// Walk animation should start walking on first frame, and also just be better
+// Touch up logo
+// Volcano background/foreground
+
+// looping music
+// Sound effects
+
+// Linux support
+
 // Debug mode is off by default
 bool debug = false;
 
@@ -152,7 +167,7 @@ int main(int argc, char** argv)
         if(mode == OPENING && !debug)
         {
             int* starts = getStartingPositions(getLevel());
-            if(frame == 10) Mix_PlayMusic(main_theme, -1);
+            // if(frame == 10) Mix_PlayMusic(main_theme, -1);
             if(frame == 100) spawnSprite(GUY, starts[0], -100, 0, 0, RIGHT, 0, 0, 0);
             if(frame == 225) spawnSprite(GUY, starts[2], -100, 0, 0, LEFT, 0, 0, 0);
             if(frame == 375) mode = TITLE;
@@ -253,6 +268,7 @@ int main(int argc, char** argv)
             if(mode == VS)
             {
                 // Input for guy 0
+                if(!succ && keys[SDL_SCANCODE_5])                          succ = cast(guy, ARCSURGE);
                 if(!succ && keys[SDL_SCANCODE_4])                          succ = cast(guy, DARKEDGE);
                 if(!succ && keys[SDL_SCANCODE_3])                          succ = cast(guy, ROCKFALL);
                 if(!succ && keys[SDL_SCANCODE_2])                          succ = cast(guy, ICESHOCK);
@@ -264,6 +280,7 @@ int main(int argc, char** argv)
                 // Input for guy 1
                 succ = 0;
                 guy = 1;
+                if(!succ && keys[SDL_SCANCODE_P])                                 succ = cast(guy, ARCSURGE);
                 if(!succ && keys[SDL_SCANCODE_O])                                 succ = cast(guy, DARKEDGE);
                 if(!succ && keys[SDL_SCANCODE_I])                                 succ = cast(guy, ROCKFALL);
                 if(!succ && keys[SDL_SCANCODE_U])                                 succ = cast(guy, ICESHOCK);
@@ -275,6 +292,7 @@ int main(int argc, char** argv)
             else if(mode == AI)
             {
                 // Input for guy 0
+                if(!succ && keys[SDL_SCANCODE_5])                                 succ = sCast(guy, ARCSURGE);
                 if(!succ && keys[SDL_SCANCODE_4])                                 succ = sCast(guy, DARKEDGE);
                 if(!succ && keys[SDL_SCANCODE_3])                                 succ = sCast(guy, ROCKFALL);
                 if(!succ && keys[SDL_SCANCODE_2])                                 succ = sCast(guy, ICESHOCK);
