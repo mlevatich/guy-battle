@@ -746,13 +746,12 @@ static void moveSprite(Sprite sp)
             {
                 sp->x_vel += convert(sp->x_vel > 0) * 0.15;
 
-                if(get_rand() <= fabs(sp->x_vel) * 0.09)
+                if(get_rand() <= fabs(sp->x_vel) * 0.05)
                 {
                     double x = sp->x_pos + (!sp->direction * 15);
-                    double y = sp->y_pos + (get_rand() - 0.2) * 10;
-                    double xv = (0.5 * sp->x_vel) + (get_rand() - 0.5) / 2;
-                    double yv = (0.5 * sp->y_vel) + (get_rand() - 0.5) / 2;
-                    spawnSprite(FIREBALL_P1, x, y, xv, yv, RIGHT, 0, 0, 10);
+                    double y = sp->y_pos + 2 + (get_rand()) * 4.5;
+                    double xv = (sp->x_vel - 0.7);
+                    spawnSprite(FIREBALL_P1, x, y, xv, 0, RIGHT, 0, 0, 10);
                 }
             }
 
@@ -812,7 +811,6 @@ static void moveSprite(Sprite sp)
             break;
 
         case DARKEDGE_P1:
-        case FIREBALL_P1:
             // Darkedge/Fireball particles wobble around randomly
             if(get_rand() <= 0.05)
             {
@@ -822,6 +820,7 @@ static void moveSprite(Sprite sp)
             break;
 
         case ARCSURGE:
+        case FIREBALL_P1:
             // The electric shock of Arcsurge doesn't move
             break;
 
@@ -1025,7 +1024,7 @@ void loadSpriteInfo()
 
     // Sprite metadata: Guy
     int* fs = (int*) malloc(sizeof(int) * 12);
-    memcpy(fs, (int[]) {0, 0, 4, 5, 10, 14, 22, 30, 40, 51, 59, 64}, sizeof(int) * 12);
+    memcpy(fs, (int[]) {0, 0, 4, 5, 10, 14, 22, 30, 40, 51, 61, 66}, sizeof(int) * 12);
     SDL_Rect* bounds = malloc(sizeof(SDL_Rect) * numBounds);
     bounds[0] = (SDL_Rect) {9, 6, 15, 14};
     bounds[1] = (SDL_Rect) {10, 24, 10, 35};
@@ -1072,7 +1071,7 @@ void loadSpriteInfo()
     memcpy(fs, (int[]) {0, 0, 3, 6}, sizeof(int) * 4);
     bounds = malloc(sizeof(SDL_Rect) * numBounds);
     bounds[0] = (SDL_Rect) {10, 7, 100, 45};
-    spell_info[ARCSURGE] = initSpell(CAST_ARCSURGE, 32, 20, 600, launchArcsurge, collideGeneric);
+    spell_info[ARCSURGE] = initSpell(CAST_ARCSURGE, 40, 28, 600, launchArcsurge, collideGeneric);
     sprite_info[ARCSURGE] = initSprite(ARCSURGE, SPELL, 35, 1, 120, 60, 250, fs, numBounds, bounds);
 
     // PARTICLES

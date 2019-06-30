@@ -6,7 +6,7 @@
 // TODOS
 
 // Velocity buffer in touchingWall()
-// Draw CAST_ARCSURGE animation for GUY (make sure numbers match up too)
+
 // Draw ARCSURGE move frames
 // Draw ARCSURGE spell icon in toolbar
 // Walk animation should start walking on first frame, and also just be better
