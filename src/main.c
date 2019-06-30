@@ -8,7 +8,6 @@
 // Velocity buffer in touchingWall()
 
 // Draw ARCSURGE move frames
-// Draw ARCSURGE spell icon in toolbar
 // Walk animation should start walking on first frame, and also just be better
 // Touch up logo
 // Volcano background/foreground
@@ -17,6 +16,8 @@
 // Sound effects
 
 // Linux support
+
+// Code cleanup
 
 // Debug mode is off by default
 bool debug = false;
