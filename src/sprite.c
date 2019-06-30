@@ -749,9 +749,11 @@ static void moveSprite(Sprite sp)
                 if(get_rand() <= fabs(sp->x_vel) * 0.05)
                 {
                     double x = sp->x_pos + (!sp->direction * 15);
-                    double y = sp->y_pos + 2 + (get_rand()) * 4.5;
-                    double xv = (sp->x_vel - 0.7);
-                    spawnSprite(FIREBALL_P1, x, y, xv, 0, RIGHT, 0, 0, 10);
+                    double y = sp->y_pos + get_rand() * 8;
+                    double xv = convert(sp->direction) * fmin(fabs(sp->x_vel - convert(sp->direction) * 0.7), 5);
+                    xv += get_rand() - 0.5;
+                    double yv = get_rand() - 0.5;
+                    spawnSprite(FIREBALL_P1, x, y, xv, yv, RIGHT, 0, 0, 10);
                 }
             }
 
