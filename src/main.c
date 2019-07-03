@@ -5,15 +5,15 @@
 
 // TODOS
 
-// Walk animation should start walking on first frame, and also just be better
 // Touch up logo
+// Walk animation should start walking on first frame, and also just be better
 // Volcano background/foreground
 
 // looping music
 // Sound effects
 
 // Linux support
-// Code cleanup / cmd args / version
+// Code cleanup
 
 // Debug mode is off by default
 bool debug = false;
@@ -72,8 +72,6 @@ void quitGame()
     // Free renderer and window
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-    renderer = NULL;
-    window = NULL;
 
     // Free SDL
     SDL_Quit();
@@ -357,7 +355,7 @@ int main(int argc, char** argv)
                 {
                     int* starts = getStartingPositions(getLevel());
                     resetGuy(1, starts[2], -100);
-                    updateScore(123);
+                    updateScore(100);
                 }
             }
 
