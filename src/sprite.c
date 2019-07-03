@@ -489,6 +489,12 @@ static void collideRockfall(Sprite sp)
     }
 }
 
+// Action function for an arcsurge collision (stored as fxn ptr in spellInfo)
+static void collideArcsurge(Sprite sp)
+{
+    // Arcsurge does not react to collisions
+}
+
 /* PER FRAME UPDATES */
 
 // If a human sprite is ready to launch a casted spell, launch it
@@ -1073,7 +1079,7 @@ void loadSpriteInfo()
     memcpy(fs, (int[]) {0, 0, 3, 6}, sizeof(int) * 4);
     bounds = malloc(sizeof(SDL_Rect) * numBounds);
     bounds[0] = (SDL_Rect) {10, 7, 100, 45};
-    spell_info[ARCSURGE] = initSpell(CAST_ARCSURGE, 40, 28, 600, launchArcsurge, collideGeneric);
+    spell_info[ARCSURGE] = initSpell(CAST_ARCSURGE, 40, 28, 600, launchArcsurge, collideArcsurge);
     sprite_info[ARCSURGE] = initSprite(ARCSURGE, SPELL, 35, 1, 120, 60, 250, fs, numBounds, bounds);
 
     // PARTICLES

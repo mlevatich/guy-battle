@@ -5,9 +5,7 @@
 
 // TODOS
 
-// Velocity buffer in touchingWall()
-
-// Draw ARCSURGE move frames
+// Draw ARCSURGE move frames and fix bounding box
 // Walk animation should start walking on first frame, and also just be better
 // Touch up logo
 // Volcano background/foreground
@@ -16,8 +14,7 @@
 // Sound effects
 
 // Linux support
-
-// Code cleanup
+// Code cleanup / cmd args / version
 
 // Debug mode is off by default
 bool debug = false;

@@ -33,5 +33,5 @@ extern SDL_Renderer* renderer;
 SDL_Texture* loadTexture(const char* path);
 
 // Debug mode - in debug mode, the framerate is lowered, the opening scene is skipped,
-// there are no cooldowns, and sprite coordinates and bounding boxes are rendered on them.
+// there are no cooldowns, and sprite coordinates and bounding boxes are rendered
 extern bool debug;
