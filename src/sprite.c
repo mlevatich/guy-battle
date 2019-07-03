@@ -1076,9 +1076,9 @@ void loadSpriteInfo()
 
     // Sprite/Spell metadata: Arcsurge
     fs = (int*) malloc(sizeof(int) * 4);
-    memcpy(fs, (int[]) {0, 0, 3, 6}, sizeof(int) * 4);
+    memcpy(fs, (int[]) {0, 0, 3, 3}, sizeof(int) * 4);
     bounds = malloc(sizeof(SDL_Rect) * numBounds);
-    bounds[0] = (SDL_Rect) {10, 7, 100, 45};
+    bounds[0] = (SDL_Rect) {5, 7, 105, 45};
     spell_info[ARCSURGE] = initSpell(CAST_ARCSURGE, 40, 28, 600, launchArcsurge, collideArcsurge);
     sprite_info[ARCSURGE] = initSprite(ARCSURGE, SPELL, 35, 1, 120, 60, 250, fs, numBounds, bounds);
 

@@ -5,7 +5,6 @@
 
 // TODOS
 
-// Draw ARCSURGE move frames and fix bounding box
 // Walk animation should start walking on first frame, and also just be better
 // Touch up logo
 // Volcano background/foreground
