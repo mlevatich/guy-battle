@@ -121,8 +121,35 @@ void resetGame(int* mode, int* selection, int* vs_or_ai)
 
 int main(int argc, char** argv)
 {
-    // Set debug mode if given as command line arg
-    if(argc > 1 && !strcmp(argv[1], "-debug")) debug = true;
+    // Parse command line arguments
+    if(argc > 1)
+    {
+        if(!strcmp(argv[1], "-d") || !strcmp(argv[1], "--debug"))
+        {
+            debug = true;
+        }
+        else if(!strcmp(argv[1], "-v") || !strcmp(argv[1], "--version"))
+        {
+            printf("GUY_BATTLE 1.0.0\n");
+            return 0;
+        }
+        else if(!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))
+        {
+            printf("\nGUY_BATTLE 1.0.0\n\n");
+            printf("Options\n");
+            printf("----------------\n");
+            printf("-d, --debug          run in debug mode\n");
+            printf("-v, --version        print version information\n");
+            printf("-h, --help           print help text\n\n");
+            return 0;
+        }
+        else
+        {
+            printf("Unknown option: %s\n", argv[1]);
+            printf("Use -h or --help to see a list of available options.\n");
+            return 0;
+        }
+    }
 
     // Load game
     if(!loadGame())
