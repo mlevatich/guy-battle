@@ -10,7 +10,7 @@
 // Volcano background/foreground
 
 // looping music
-// Sound effects
+// Sound effects / mute flag
 
 // Linux support
 // Code cleanup
@@ -189,7 +189,7 @@ int main(int argc, char** argv)
         if(mode == OPENING && !debug)
         {
             int* starts = getStartingPositions(getLevel());
-            // if(frame == 10) Mix_PlayMusic(main_theme, -1);
+            if(frame == 10) Mix_PlayMusic(main_theme, -1);
             if(frame == 100) spawnSprite(GUY, starts[0], -100, 0, 0, RIGHT, 0, 0, 0);
             if(frame == 225) spawnSprite(GUY, starts[2], -100, 0, 0, LEFT, 0, 0, 0);
             if(frame == 375) mode = TITLE;
