@@ -1022,9 +1022,8 @@ void loadSpriteInfo()
 
     // HUMANS
 
-    int numBounds = 2;
-
     // Sprite metadata: Guy
+    int numBounds = 2;
     int* fs = (int*) malloc(sizeof(int) * 12);
     memcpy(fs, (int[]) {0, 0, 4, 5, 10, 14, 22, 30, 40, 51, 64, 69}, sizeof(int) * 12);
     SDL_Rect* bounds = malloc(sizeof(SDL_Rect) * numBounds);
@@ -1034,9 +1033,8 @@ void loadSpriteInfo()
 
     // SPELLS
 
-    numBounds = 1;
-
     // Sprite/Spell metadata: Fireball
+    numBounds = 1;
     fs = (int*) malloc(sizeof(int) * 4);
     memcpy(fs, (int[]) {0, 0, 2, 5}, sizeof(int) * 4);
     bounds = malloc(sizeof(SDL_Rect) * numBounds);
@@ -1045,6 +1043,7 @@ void loadSpriteInfo()
     sprite_info[FIREBALL] = initSprite(FIREBALL, SPELL, 15, 1, 23, 10, 60, fs, numBounds, bounds);
 
     // Sprite/Spell metadata: Iceshock
+    numBounds = 1;
     fs = (int*) malloc(sizeof(int) * 4);
     memcpy(fs, (int[]) {0, 0, 2, 5}, sizeof(int) * 4);
     bounds = malloc(sizeof(SDL_Rect) * numBounds);
@@ -1053,26 +1052,32 @@ void loadSpriteInfo()
     sprite_info[ICESHOCK] = initSprite(ICESHOCK, SPELL, 20, 1, 23, 10, 70, fs, numBounds, bounds);
 
     // Sprite/Spell metadata: Rockfall
+    numBounds = 3;
     fs = (int*) malloc(sizeof(int) * 4);
     memcpy(fs, (int[]) {0, 3, 4, 7}, sizeof(int) * 4);
     bounds = malloc(sizeof(SDL_Rect) * numBounds);
-    bounds[0] = (SDL_Rect) {5, 5, 90, 90};
+    bounds[0] = (SDL_Rect) {40, 5, 20, 90};
+    bounds[1] = (SDL_Rect) {20, 20, 60, 60};
+    bounds[2] = (SDL_Rect) {5, 40, 90, 20};
     spell_info[ROCKFALL] = initSpell(CAST_ROCKFALL, 40, 40, 420, launchRockfall, collideRockfall);
     sprite_info[ROCKFALL] = initSprite(ROCKFALL, SPELL, 30, 1, 100, 100, 85, fs, numBounds, bounds);
 
     // Sprite/Spell metadata: Darkedge
+    numBounds = 2;
     fs = (int*) malloc(sizeof(int) * 4);
     memcpy(fs, (int[]) {0, 5, 8, 11}, sizeof(int) * 4);
     bounds = malloc(sizeof(SDL_Rect) * numBounds);
-    bounds[0] = (SDL_Rect) {5, 11, 50, 9};
+    bounds[0] = (SDL_Rect) {5, 8, 25, 10};
+    bounds[1] = (SDL_Rect) {30, 15, 25, 10};
     spell_info[DARKEDGE] = initSpell(CAST_DARKEDGE, 44, 24, 420, launchDarkedge, collideGeneric);
     sprite_info[DARKEDGE] = initSprite(DARKEDGE, SPELL, 25, 1, 60, 30, 215, fs, numBounds, bounds);
 
     // Sprite/Spell metadata: Arcsurge
+    numBounds = 1;
     fs = (int*) malloc(sizeof(int) * 4);
     memcpy(fs, (int[]) {0, 0, 3, 3}, sizeof(int) * 4);
     bounds = malloc(sizeof(SDL_Rect) * numBounds);
-    bounds[0] = (SDL_Rect) {5, 7, 92, 45};
+    bounds[0] = (SDL_Rect) {5, 20, 92, 20};
     spell_info[ARCSURGE] = initSpell(CAST_ARCSURGE, 52, 40, 600, launchArcsurge, collideArcsurge);
     sprite_info[ARCSURGE] = initSprite(ARCSURGE, SPELL, 35, 1, 120, 60, 250, fs, numBounds, bounds);
 
