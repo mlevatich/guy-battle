@@ -3,10 +3,9 @@
 #include "../headers/level.h"
 #include "../headers/interface.h"
 
-// TODO: bounding boxes for rockfall
-
-// Debug mode is off by default
+// Debug mode is off and sound is on by default
 bool debug = false;
+bool mute = false;
 
 // Window and renderer, used by all modules
 SDL_Window* window = NULL;
@@ -115,6 +114,11 @@ int main(int argc, char** argv)
         if(!strcmp(argv[1], "-d") || !strcmp(argv[1], "--debug"))
         {
             debug = true;
+            mute = true;
+        }
+        else if(!strcmp(argv[1], "-m") || !strcmp(argv[1], "--mute"))
+        {
+            mute = true;
         }
         else if(!strcmp(argv[1], "-v") || !strcmp(argv[1], "--version"))
         {
@@ -127,6 +131,7 @@ int main(int argc, char** argv)
             printf("Options\n");
             printf("----------------\n");
             printf("-d, --debug          run in debug mode\n");
+            printf("-m, --mute           play with no sound effects or music\n");
             printf("-v, --version        print version information\n");
             printf("-h, --help           print help text\n\n");
             return 0;
@@ -142,7 +147,7 @@ int main(int argc, char** argv)
     // Load game
     if(!loadGame())
     {
-        fprintf(stderr,"Error: Initialization Failed\n");
+        fprintf(stderr, "Error: Initialization Failed\n");
         return 1;
     }
 
@@ -157,15 +162,6 @@ int main(int argc, char** argv)
     // Track how many frames have passed since the game started
     long long frame = 0;
 
-    // In debug mode, spawn the guys immediately
-    if(debug)
-    {
-        int* starts = getStartingPositions(getLevel());
-        spawnSprite(GUY, starts[0], starts[1], 0, 0, RIGHT, 0, 0, 0);
-        spawnSprite(GUY, starts[2], starts[3], 0, 0, LEFT, 0, 0, 0);
-        mode = TITLE;
-    }
-
     // Game loop
     bool quit = false;
     SDL_Event e;
@@ -174,16 +170,16 @@ int main(int argc, char** argv)
         // Track how long this frame takes
         int start_time = SDL_GetTicks();
 
-        // Some events occur at specific points in the opening scene
-        // End opening and give control to the player after 375 frames
-        if(mode == OPENING && !debug)
-        {
-            int* starts = getStartingPositions(getLevel());
-            if(frame == 10) Mix_PlayMusic(main_theme, -1);
-            if(frame == 100) spawnSprite(GUY, starts[0], -100, 0, 0, RIGHT, 0, 0, 0);
-            if(frame == 225) spawnSprite(GUY, starts[2], -100, 0, 0, LEFT, 0, 0, 0);
-            if(frame == 375) mode = TITLE;
-        }
+        // Delay the music starting a little bit because it's less jarring
+        if(!mute && frame == 10) Mix_PlayMusic(main_theme, -1);
+
+        // immediately spawn guys and go to title in debug mode
+        // otherwise guys spawn at specific points in opening scene
+        int f = frame, m = mode;
+        int* s = getStartingPositions(getLevel());
+        if((m == OPENING && f == 100) || (debug && f == 0)) spawnSprite(GUY, s[0], -100, 0, 0, RIGHT, 0, 0, 0);
+        if((m == OPENING && f == 225) || (debug && f == 0)) spawnSprite(GUY, s[2], -100, 0, 0, LEFT, 0, 0, 0);
+        if((m == OPENING && f == 375) || (debug && f == 0)) mode = TITLE;
 
         // Process any SDL events that have happened since last frame
         while(SDL_PollEvent(&e) != 0)

@@ -221,7 +221,7 @@ void loadLevels()
 
     // Forest Guy starting spots
     int* forest_starts = (int*) malloc(sizeof(int) * 4);
-    memcpy(forest_starts, (int[]) { 100, 190, 896, 190 }, sizeof(int) * 4);
+    memcpy(forest_starts, (int[]) { 100, 192, 896, 192 }, sizeof(int) * 4);
     foregrounds[FOREST] = initForeground("art/forest_foreground.bmp", forest_platforms, forest_walls, forest_starts);
 
     // Volcano platforms
@@ -246,7 +246,7 @@ void loadLevels()
 
     // Volcano Guy starting spots
     int* volcano_starts = (int*) malloc(sizeof(int) * 4);
-    memcpy(volcano_starts, (int[]){250, 290, 747, 290}, sizeof(int) * 4);
+    memcpy(volcano_starts, (int[]){250, 294, 747, 294}, sizeof(int) * 4);
     foregrounds[VOLCANO] = initForeground("art/volcano_foreground.bmp", volcano_platforms, volcano_walls, volcano_starts);
 }
 
