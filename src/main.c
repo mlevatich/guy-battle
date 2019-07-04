@@ -3,17 +3,7 @@
 #include "../headers/level.h"
 #include "../headers/interface.h"
 
-// TODOS
-
-// Touch up logo
-// Walk animation should start walking on first frame, and also just be better
-// Volcano background/foreground
-
-// looping music
-// Sound effects / mute flag
-
-// Linux support
-// Code cleanup
+// TODO: bounding boxes for rockfall
 
 // Debug mode is off by default
 bool debug = false;

@@ -294,21 +294,26 @@ void takeCPUAction()
 }
 
 // Attempt to walk in a direction after a keyboard input
-bool walk(int guy, bool direction)
+bool walk(int guy, bool left_or_right)
 {
     // Guy can only walk if he's not casting or colliding (can still move left/right in midair)
     if(!(guys[guy]->casting || guys[guy]->colliding))
     {
+        // Guy has less control in midair
+        double speed = 0.45;
+        if(guys[guy]->y_vel != 0) speed = 0.35;
+        double top_speed = 4.5;
+
         // Update velocity and direction facing based on direction of walk
-        if(direction == LEFT)
+        if(left_or_right == LEFT)
         {
-            guys[guy]->x_vel = fmax(guys[guy]->x_vel - 0.4, -4.0);
+            guys[guy]->x_vel = fmax(guys[guy]->x_vel - speed, -1 * top_speed);
         }
         else
         {
-            guys[guy]->x_vel = fmin(guys[guy]->x_vel + 0.4, 4.0);
+            guys[guy]->x_vel = fmin(guys[guy]->x_vel + speed, top_speed);
         }
-        guys[guy]->direction = direction;
+        guys[guy]->direction = left_or_right;
         return 1;
     }
     return 0;
@@ -348,7 +353,7 @@ static void launchFireball(Sprite sp)
     // Starting position and velocity of the fireball
     double x = sp->x_pos;
     double y = sp->y_pos + 28;
-    double xv = convert(sp->direction) * 1;
+    double xv = convert(sp->direction) * 1.2;
     if(sp->direction == RIGHT) x += sp->meta->width - 4;
     else                       x -= sprite_info[FIREBALL]->width - 4;
 
@@ -356,45 +361,37 @@ static void launchFireball(Sprite sp)
     spawnSprite(FIREBALL, x, y, xv, 0, sp->direction, 0, 0, 0);
 }
 
+// Helper function to launch a single ice missile
+static void launchIceshockSingle(Sprite sp, double x_dist, double y_dist, double x_speed, double y_speed, int dir)
+{
+    // Starting orientation/side-of-caster of the missile
+    int side = convert(dir);
+    int angle = (int) (57.296 * atan(y_speed / (side * x_speed)));
+
+    // Starting position of the missile
+    double ice_xpos = (side*x_dist)+sp->x_pos+sp->meta->width/4-3;
+    double ice_ypos = sp->y_pos-y_dist;
+
+    // Spawn one missile and four small particles around it
+    spawnSprite(ICESHOCK, ice_xpos, ice_ypos, side * x_speed, y_speed, dir, angle, 0, 0);
+    for(int j = 0; j < 4; j++)
+    {
+        double ptc_x = ice_xpos + (get_rand() - 0.5) * 10;
+        double ptc_y = ice_ypos + (get_rand() - 0.5) * 10;
+        double ptc_xv = side * (x_speed * get_rand() + 2);
+        double ptc_yv = y_speed * get_rand() - x_speed;
+        spawnSprite(ICESHOCK_P1, ptc_x, ptc_y, ptc_xv, ptc_yv, dir, 0, 0, 0);
+    }
+}
+
 // Action function for launching an iceshock (stored as fxn ptr in spellInfo)
 static void launchIceshock(Sprite sp)
 {
-    for(double i = 0; i < 4; i++)
+    for(int dir = LEFT; dir <= RIGHT; dir++)
     {
-        // Inner missile or outer missile speed/displacement
-        double x_speed = 0, y_speed = -6, x_dist = 0, y_dist = 0;
-        if(i == 0 || i == 3)
-        {
-            x_speed = 5;
-            x_dist = 15;
-            y_dist = 5;
-        }
-        else
-        {
-            x_speed = 2.5;
-            x_dist = 5;
-            y_dist = 15;
-        }
-
-        // Starting orientation/side-of-caster of the missile
-        int direction = (i > 1.5);
-        int side = convert(direction);
-        int angle = (int) (57.296 * atan(y_speed / (side * x_speed)));
-
-        // Starting position of the missile
-        double ice_xpos = (side*x_dist)+sp->x_pos+sp->meta->width/4-3;
-        double ice_ypos = sp->y_pos-y_dist;
-
-        // Spawn one missile and four small particles around it
-        spawnSprite(ICESHOCK, ice_xpos, ice_ypos, side * x_speed, y_speed, direction, angle, 0, 0);
-        for(int j = 0; j < 4; j++)
-        {
-            double ptc_x = ice_xpos + (get_rand() - 0.5) * 10;
-            double ptc_y = ice_ypos + (get_rand() - 0.5) * 10;
-            double ptc_xv = side * (x_speed * get_rand() + 2);
-            double ptc_yv = y_speed * get_rand() - x_speed;
-            spawnSprite(ICESHOCK_P1, ptc_x, ptc_y, ptc_xv, ptc_yv, direction, 0, 0, 0);
-        }
+        launchIceshockSingle(sp, 20, 0, 8, -4, dir);
+        launchIceshockSingle(sp, 10, 10, 5, -5, dir);
+        launchIceshockSingle(sp, 5, 20, 2, -6, dir);
     }
 }
 
@@ -699,17 +696,14 @@ static void updateAnimationFrame(Sprite sp)
     // Sprite proceeds through animation frames faster during certain actions
     int a = sp->action;
     double increment = ANIMATION_SPEED * 0.1;
+    if(a == MOVE && sp->meta->id == GUY) increment *= 2;
     if(a == JUMP || a == COLLIDE || a == SPAWN || sp->meta->id == ARCSURGE) increment *= 1.5;
     if(a >= CAST_FIREBALL) increment *= 2.5;
     sp->frame += increment;
 
     // If the sprite's action has just changed, reset to first animation frame of that action
-    if(sp->action_change)
-    {
-        sp->frame = sp->meta->frame_sections[a];
-        if(a == MOVE && sp->meta->id == GUY) sp->frame++;
-        sp->action_change = false;
-    }
+    if(sp->action_change) sp->frame = sp->meta->frame_sections[a];
+    sp->action_change = false;
 
     // Wraparound to first animation frame of an action if we reach the last frame for that action
     if(sp->frame >= sp->meta->frame_sections[a+1])
@@ -740,7 +734,7 @@ static void moveSprite(Sprite sp)
         case GUY:
             // Update x velocity (friction / air resistance)
             if(fabs(sp->x_vel) <= 0.3) sp->x_vel = 0;
-            else                       sp->x_vel += convert(sp->x_vel < 0.0f)*0.1;
+            else                       sp->x_vel += convert(sp->x_vel < 0.0f) * 0.15;
 
             // Update y velocity (terminal velocity of 50)
             sp->y_vel = fmin(sp->y_vel + 0.5, 50);
@@ -800,8 +794,8 @@ static void moveSprite(Sprite sp)
             // Darkedge accelerates over time and spawns a particle trail
             if(!sp->colliding && !sp->spawning)
             {
-                sp->x_vel += convert(sp->x_vel > 0) * 0.2;
-                sp->y_vel += 0.05;
+                sp->x_vel += convert(sp->x_vel > 0) * 0.4;
+                sp->y_vel += 0.1;
 
                 if(get_rand() <= fabs(sp->x_vel) * 0.1)
                 {
@@ -1032,11 +1026,11 @@ void loadSpriteInfo()
 
     // Sprite metadata: Guy
     int* fs = (int*) malloc(sizeof(int) * 12);
-    memcpy(fs, (int[]) {0, 0, 4, 5, 10, 14, 22, 30, 40, 51, 61, 66}, sizeof(int) * 12);
+    memcpy(fs, (int[]) {0, 0, 4, 5, 10, 14, 22, 30, 40, 51, 64, 69}, sizeof(int) * 12);
     SDL_Rect* bounds = malloc(sizeof(SDL_Rect) * numBounds);
-    bounds[0] = (SDL_Rect) {9, 6, 15, 14};
-    bounds[1] = (SDL_Rect) {10, 24, 10, 35};
-    sprite_info[GUY] = initSprite(GUY, HUMANOID, 10, 100, 28, 60, 0, fs, numBounds, bounds);
+    bounds[0] = (SDL_Rect) {9, 5, 15, 14};
+    bounds[1] = (SDL_Rect) {10, 23, 10, 35};
+    sprite_info[GUY] = initSprite(GUY, HUMANOID, 10, 100, 28, 58, 0, fs, numBounds, bounds);
 
     // SPELLS
 
@@ -1063,7 +1057,7 @@ void loadSpriteInfo()
     memcpy(fs, (int[]) {0, 3, 4, 7}, sizeof(int) * 4);
     bounds = malloc(sizeof(SDL_Rect) * numBounds);
     bounds[0] = (SDL_Rect) {5, 5, 90, 90};
-    spell_info[ROCKFALL] = initSpell(CAST_ROCKFALL, 40, 40, 360, launchRockfall, collideRockfall);
+    spell_info[ROCKFALL] = initSpell(CAST_ROCKFALL, 40, 40, 420, launchRockfall, collideRockfall);
     sprite_info[ROCKFALL] = initSprite(ROCKFALL, SPELL, 30, 1, 100, 100, 85, fs, numBounds, bounds);
 
     // Sprite/Spell metadata: Darkedge
@@ -1071,15 +1065,15 @@ void loadSpriteInfo()
     memcpy(fs, (int[]) {0, 5, 8, 11}, sizeof(int) * 4);
     bounds = malloc(sizeof(SDL_Rect) * numBounds);
     bounds[0] = (SDL_Rect) {5, 11, 50, 9};
-    spell_info[DARKEDGE] = initSpell(CAST_DARKEDGE, 44, 24, 480, launchDarkedge, collideGeneric);
+    spell_info[DARKEDGE] = initSpell(CAST_DARKEDGE, 44, 24, 420, launchDarkedge, collideGeneric);
     sprite_info[DARKEDGE] = initSprite(DARKEDGE, SPELL, 25, 1, 60, 30, 215, fs, numBounds, bounds);
 
     // Sprite/Spell metadata: Arcsurge
     fs = (int*) malloc(sizeof(int) * 4);
     memcpy(fs, (int[]) {0, 0, 3, 3}, sizeof(int) * 4);
     bounds = malloc(sizeof(SDL_Rect) * numBounds);
-    bounds[0] = (SDL_Rect) {5, 7, 105, 45};
-    spell_info[ARCSURGE] = initSpell(CAST_ARCSURGE, 40, 28, 600, launchArcsurge, collideArcsurge);
+    bounds[0] = (SDL_Rect) {5, 7, 92, 45};
+    spell_info[ARCSURGE] = initSpell(CAST_ARCSURGE, 52, 40, 600, launchArcsurge, collideArcsurge);
     sprite_info[ARCSURGE] = initSprite(ARCSURGE, SPELL, 35, 1, 120, 60, 250, fs, numBounds, bounds);
 
     // PARTICLES

@@ -38,7 +38,7 @@ int getHealth(int guy);
 double* getCooldowns(int guy);
 
 // Attempt to walk in a direction after a keyboard input
-bool walk(int guy, bool direction);
+bool walk(int guy, bool left_or_right);
 
 // Attempt to jump after a keyboard input
 bool jump(int guy);
