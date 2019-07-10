@@ -566,7 +566,7 @@ static void applyCollision(Sprite sp, Sprite other)
     if(sp->meta->type == HUMANOID)
     {
         // Get which direction the collision is coming from
-        int direction = convert(xCenter(other) > xCenter(sp));
+        int direction = convert(xCenter(other) >= xCenter(sp));
 
         // Special case: Arcsurge always hits target in the direction that it is cast
         if(other->meta->id == ARCSURGE) direction = convert(!other->direction);
