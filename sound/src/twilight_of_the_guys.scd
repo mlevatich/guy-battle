@@ -66,8 +66,8 @@ p = Ptpar([
 		\amp, 0.5,
 		\dur, Pseq([Pseq([1, 1/2], 48), Pseq([Pseq([1, 1/2, 1/2, 1/2, 1/2], 3), Pseq([1, 1, 1], 1)], 4), Pseq([1.5, 1/2, 1/2, 1/2, 1, 1, 1], 8)], 1)
 	)
-], 2);
-//s.record(path: "~/Code/Game/Game/Sound/Twilight_of_the_Gods.wav".standardizePath);
+], 6);
+
+s.record(path: "~/Recordings/twilight_of_the_guys.aiff".standardizePath, duration: 243);
 p.play;
-//s.stopRecording;
 )
