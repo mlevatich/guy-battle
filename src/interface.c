@@ -1,4 +1,5 @@
 #include "../headers/constants.h"
+#include "../headers/sound.h"
 #include "../headers/interface.h"
 
 // Struct for a toolbar element
@@ -21,18 +22,6 @@ typedef struct menu_selection
     int mode_in;       // mode this option appears in
     int mode_out;      // mode this option redirects to
 }* Selection;
-
-// List of toolbar elements
-enum elements
-{ COOLDOWN_BAR, HEALTH_BAR, LOGO, ARROW };
-
-// Text alignment options
-enum text_align
-{ L, C };
-
-#define NUM_ELEMENTS 4      // Total number of toolbar elements
-#define NUM_MENU_OPTIONS 5  // Total number of menu options (across all menus)
-#define FONT_SIZE 30        // Size in pixels of a letter
 
 SDL_Texture* toolbar;       // Texture containing all toolbar elements
 Tool* element_list;         // Array of all toolbar elements
@@ -77,9 +66,11 @@ int hover(int mode, int direction)
     // stick with the current spot
     if(best_y == 999) return self_ret;
 
-    // Otherwise, switch to the new spot
+    // Otherwise, switch to the new spot and play the hover sound effect
     element_list[ARROW]->x = best_x;
     element_list[ARROW]->y = best_y;
+    playSoundEffect(SFX_HOVER);
+
     return ret_val;
 }
 

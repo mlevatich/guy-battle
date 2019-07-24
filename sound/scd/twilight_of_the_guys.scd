@@ -68,6 +68,6 @@ p = Ptpar([
 	)
 ], 6);
 
-s.record(path: "~/Recordings/twilight_of_the_guys.aiff".standardizePath, duration: 243);
+// s.record(path: "~/Recordings/twilight_of_the_guys.aiff".standardizePath, duration: 243);
 p.play;
 )

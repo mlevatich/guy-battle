@@ -5,6 +5,10 @@
  and foregrounds (interactive level ground, platforms, and walls)
  */
 
+// Number of existing backgrounds and foregrounds
+#define NUM_BACKGROUNDS 2
+#define NUM_FOREGROUNDS 2
+
 // Background / Foreground list
 enum levels
 { FOREST, VOLCANO };

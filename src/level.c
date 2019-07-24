@@ -1,4 +1,5 @@
 #include "../headers/constants.h"
+#include "../headers/sound.h"
 #include "../headers/level.h"
 
 // Struct for background information
@@ -35,22 +36,19 @@ typedef struct foreground
 enum drift_types
 { SCROLL, DRIFT };
 
-#define NUM_BACKGROUNDS 2       // Number of existing backgrounds
-#define NUM_FOREGROUNDS 2       // Number of existing foregrounds
-
 Background* backgrounds = NULL; // Array of existing backgrounds
 Foreground* foregrounds = NULL; // Array of existing foregrounds
 
-int currentBackground = FOREST; // Current background
-int currentForeground = FOREST; // Current foreground
+int current_background = FOREST; // Current background
+int current_foreground = FOREST; // Current foreground
 
 /* SETTERS */
 
 // Switch the level to a new one
 void switchLevel(int new_level)
 {
-    currentBackground = new_level;
-    currentForeground = new_level;
+    current_background = new_level;
+    current_foreground = new_level;
 }
 
 /* GETTERS */
@@ -58,19 +56,19 @@ void switchLevel(int new_level)
 // Returns current level
 int getLevel()
 {
-    return currentForeground;
+    return current_foreground;
 }
 
 // Returns the platforms on the current foreground
 int* getPlatforms()
 {
-    return foregrounds[currentForeground]->platforms;
+    return foregrounds[current_foreground]->platforms;
 }
 
 // Returns the walls on the current foreground
 int* getWalls()
 {
-    return foregrounds[currentForeground]->walls;
+    return foregrounds[current_foreground]->walls;
 }
 
 // Returns starting position of the guys on the current foreground
@@ -85,7 +83,7 @@ int* getStartingPositions(int fg)
 void moveBackground()
 {
     // Update position of the current background according to its velocity
-    Background bg = backgrounds[currentBackground];
+    Background bg = backgrounds[current_background];
     bg->x += bg->x_vel;
     bg->y += bg->y_vel;
 
@@ -115,7 +113,7 @@ void moveBackground()
 static void renderBackground()
 {
     // Draw the background at it's current position
-    Background bg = backgrounds[currentBackground];
+    Background bg = backgrounds[current_background];
     SDL_Rect quad = {(int) bg->x * -1, (int) bg->y * -1, bg->width, bg->height};
     SDL_RenderCopy(renderer, bg->image, NULL, &quad);
 
@@ -133,7 +131,7 @@ static void renderBackground()
 // Render the current foreground
 static void renderForeground()
 {
-    SDL_RenderCopy(renderer, foregrounds[currentForeground]->image, NULL, NULL);
+    SDL_RenderCopy(renderer, foregrounds[current_foreground]->image, NULL, NULL);
 }
 
 // Render the current level

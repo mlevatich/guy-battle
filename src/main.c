@@ -1,11 +1,11 @@
 #include "../headers/constants.h"
+#include "../headers/sound.h"
 #include "../headers/sprite.h"
 #include "../headers/level.h"
 #include "../headers/interface.h"
 
-// Debug mode is off and sound is on by default
+// Debug mode is off by default
 bool debug = false;
-bool mute = false;
 
 // Window and renderer, used by all modules
 SDL_Window* window = NULL;
@@ -16,9 +16,6 @@ bool loadGame()
 {
     // Initialize SDL
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) return false;
-
-    // Initialize sound
-    if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) return false;
 
     // Create window
     window = SDL_CreateWindow("GUY BATTLE", 20, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
@@ -40,6 +37,9 @@ bool loadGame()
     // Load UI elements
     loadInterface();
 
+    // Load audio elements
+    loadSound();
+
     return true;
 }
 
@@ -57,6 +57,9 @@ void quitGame()
 
     // Free UI elements
     freeInterface();
+
+    // Free audio elements
+    freeSound();
 
     // Free renderer and window
     SDL_DestroyRenderer(renderer);
@@ -77,6 +80,12 @@ SDL_Texture* loadTexture(const char* path)
     newTexture = SDL_CreateTextureFromSurface(renderer, loaded);
     SDL_FreeSurface(loaded);
     return newTexture;
+}
+
+// Turn debug mode on
+void setDebugMode()
+{
+    debug = true;
 }
 
 // Helper function to cast a spell and update the score on success
@@ -113,12 +122,12 @@ int main(int argc, char** argv)
     {
         if(!strcmp(argv[1], "-d") || !strcmp(argv[1], "--debug"))
         {
-            debug = true;
-            mute = true;
+            setDebugMode();
+            setMute();
         }
         else if(!strcmp(argv[1], "-m") || !strcmp(argv[1], "--mute"))
         {
-            mute = true;
+            setMute();
         }
         else if(!strcmp(argv[1], "-v") || !strcmp(argv[1], "--version"))
         {
@@ -151,9 +160,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    // Load music and sound effects
-    Mix_Music* main_theme = Mix_LoadMUS("sound/twilight_of_the_guys.wav");
-
     // Track what mode the game is in, and what menu selection is hovered
     int mode = OPENING;
     int selection = VS;
@@ -171,9 +177,9 @@ int main(int argc, char** argv)
         int start_time = SDL_GetTicks();
 
         // Delay the music starting a little bit because it's less jarring
-        if(!mute && frame == 10) Mix_PlayMusic(main_theme, -1);
+        if(frame == 10) startMusic();
 
-        // immediately spawn guys and go to title in debug mode
+        // Immediately spawn guys and go to title in debug mode,
         // otherwise guys spawn at specific points in opening scene
         int f = frame, m = mode;
         int* s = getStartingPositions(getLevel());
@@ -200,10 +206,12 @@ int main(int argc, char** argv)
                             if(selection == CONTROLS)
                             {
                                 mode = selection;
+                                playSoundEffect(SFX_SELECT);
                             }
                             else
                             {
                                 mode = STAGE_SELECT;
+                                playSoundEffect(SFX_SELECT);
                                 vs_or_ai = selection;
                             }
                         }
@@ -222,6 +230,7 @@ int main(int argc, char** argv)
                         if(key == SDLK_RETURN)
                         {
                             mode = vs_or_ai;
+                            playSoundEffect(SFX_SELECT);
                         }
                         else if(key == SDLK_ESCAPE)
                         {
@@ -363,10 +372,6 @@ int main(int argc, char** argv)
         if(sleep_time > 0) SDL_Delay(sleep_time);
         frame++;
     }
-
-    // Free music and sound effects
-    Mix_FreeMusic(main_theme);
-    Mix_Quit();
 
     // Free all resources and exit game
     quitGame();

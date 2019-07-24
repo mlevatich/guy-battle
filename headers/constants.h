@@ -3,7 +3,6 @@
  */
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -27,14 +26,12 @@ static inline double get_rand() { return (double) rand() / (double) RAND_MAX; }
 // Convert (0,1) to (-1,1)
 static inline int convert(bool c) { return (c - (c == 0)); }
 
+// External constants initialized in main.c
 // Rendering, display, texture loading
 extern SDL_Window* window;
 extern SDL_Renderer* renderer;
 SDL_Texture* loadTexture(const char* path);
 
-// Debug mode - in debug mode, the framerate is lowered, the opening scene is skipped,
-// there are no cooldowns, music is muted, and sprite origins and bounding boxes are rendered
+// In debug mode, the framerate is lowered, the opening scene is skipped, there are no cooldowns,
+// music is muted, and sprite origins and bounding boxes are rendered
 extern bool debug;
-
-// Mute mode - when the game is muted, no music or sound effects play
-extern bool mute;

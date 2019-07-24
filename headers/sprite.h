@@ -6,6 +6,10 @@
  game's code.
  */
 
+// Number of distinct spells and sprites in the game
+#define NUM_SPRITES 12
+#define NUM_SPELLS 5
+
 // Sprite list - doubles as the spell list, so spells must come first
 enum identities
 { FIREBALL,    ICESHOCK,    ROCKFALL,                 DARKEDGE,    ARCSURGE,

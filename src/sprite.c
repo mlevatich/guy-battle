@@ -1,4 +1,5 @@
 #include "../headers/constants.h"
+#include "../headers/sound.h"
 #include "../headers/sprite.h"
 
 // Struct for sprite meta information
@@ -63,11 +64,8 @@ typedef struct ele
     struct ele* next;           // next node
 }* SpriteList;
 
-#define NUM_SPRITES 12          // Number of distinct sprites in the game
-#define NUM_SPELLS 5            // Number of distinct spells in the game
-
-SDL_Texture* spriteSheet;       // Texture containing all sprites
-SpriteList activeSprites;       // Linked list of currently active sprites
+SDL_Texture* sprite_sheet;       // Texture containing all sprites
+SpriteList active_sprites;       // Linked list of currently active sprites
 SpriteInfo* sprite_info;        // Array of meta info structs for sprites, indexed by identities enum (sprite.h)
 SpellInfo* spell_info;          // Array of meta info structs for spells, indexed by identities enum (sprite.h)
 
@@ -98,8 +96,8 @@ void spawnSprite(int id, double x, double y, double xv, double yv, bool dir, int
     struct ele* new_sprite = (struct ele*) malloc(sizeof(struct ele));
     new_sprite->sp = sp;
     new_sprite->next = NULL;
-    if(activeSprites != NULL) new_sprite->next = activeSprites;
-    activeSprites = new_sprite;
+    if(active_sprites != NULL) new_sprite->next = active_sprites;
+    active_sprites = new_sprite;
 
     // If sprite is a guy store a reference to him
     if(sp->meta->id == GUY)
@@ -510,7 +508,7 @@ static void launchSpell(Sprite sp)
 void launchSpells()
 {
     // Iterate over active sprites
-    for(struct ele* cursor = activeSprites; cursor != NULL; cursor = cursor->next)
+    for(struct ele* cursor = active_sprites; cursor != NULL; cursor = cursor->next)
     {
         if(cursor->sp->meta->type == HUMANOID) launchSpell(cursor->sp);
     }
@@ -586,14 +584,14 @@ static void applyCollision(Sprite sp, Sprite other)
 void spriteCollisions()
 {
     // Iterate over all active sprites
-    for(struct ele* cursor = activeSprites; cursor != NULL; cursor = cursor->next)
+    for(struct ele* cursor = active_sprites; cursor != NULL; cursor = cursor->next)
     {
         // Colliding sprites, spawning sprites, and particles don't interact
         Sprite sp = cursor->sp;
         if(sp->meta->type == PARTICLE || sp->colliding || sp->spawning) continue;
 
         // Otherwise, need to check for a collision against every other sprite
-        for(struct ele* cursor = activeSprites; cursor != NULL; cursor = cursor->next)
+        for(struct ele* cursor = active_sprites; cursor != NULL; cursor = cursor->next)
         {
             // Colliding sprites, spawning sprites, and particles don't interact
             Sprite other = cursor->sp;
@@ -666,7 +664,7 @@ static void terrainCollision(Sprite sp, int* platforms, int* walls)
 // Check for and handle terrain collisions for all active sprites
 void terrainCollisions(int* platforms, int* walls)
 {
-    for(struct ele* cursor = activeSprites; cursor != NULL; cursor = cursor->next)
+    for(struct ele* cursor = active_sprites; cursor != NULL; cursor = cursor->next)
     {
         terrainCollision(cursor->sp, platforms, walls);
     }
@@ -715,7 +713,7 @@ static void updateAnimationFrame(Sprite sp)
 // Update the animation frame which is drawn for all active sprites
 void updateAnimationFrames()
 {
-    for(struct ele* cursor = activeSprites; cursor != NULL; cursor = cursor->next)
+    for(struct ele* cursor = active_sprites; cursor != NULL; cursor = cursor->next)
     {
         updateAnimationFrame(cursor->sp);
     }
@@ -846,7 +844,7 @@ static void moveSprite(Sprite sp)
 // Calculate physics and update position and orientation for all active sprites
 void moveSprites()
 {
-    for(struct ele* cursor = activeSprites; cursor != NULL; cursor = cursor->next)
+    for(struct ele* cursor = active_sprites; cursor != NULL; cursor = cursor->next)
     {
         moveSprite(cursor->sp);
     }
@@ -881,7 +879,7 @@ static void advanceTime(Sprite sp)
 void advanceTimers()
 {
     // Iterate over active sprites
-    for(struct ele* cursor = activeSprites; cursor != NULL; cursor = cursor->next)
+    for(struct ele* cursor = active_sprites; cursor != NULL; cursor = cursor->next)
     {
         advanceTime(cursor->sp);
     }
@@ -898,20 +896,20 @@ static void renderBounds(Sprite sp)
         SDL_Rect box = bounds[i];
         SDL_Rect clip = {739, 77, box.w, 1};
         SDL_Rect renderQuad = {(int)sp->x_pos + box.x, (int)sp->y_pos + box.y, box.w, 1};
-        SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(renderer, sprite_sheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
 
         // Line 2
         renderQuad = (SDL_Rect) {(int)sp->x_pos + box.x, (int)sp->y_pos + box.y + box.h, box.w, 1};
-        SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(renderer, sprite_sheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
 
         // Line 3
         clip = (SDL_Rect) {739, 77, 1, box.h};
         renderQuad = (SDL_Rect) {(int)sp->x_pos+ box.x, (int)sp->y_pos + box.y, 1, box.h};
-        SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(renderer, sprite_sheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
 
         // Line 4
         renderQuad = (SDL_Rect) {(int)sp->x_pos + box.x + box.w, (int)sp->y_pos + box.y, 1, box.h};
-        SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(renderer, sprite_sheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
     }
 }
 
@@ -927,7 +925,7 @@ static void renderSprite(Sprite sp)
 
     // Draw the sprite at its current x and y position
     SDL_Rect renderQuad = {(int)sp->x_pos, (int)sp->y_pos, sp->meta->width, sp->meta->height};
-    SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, sp->angle, NULL, flipType);
+    SDL_RenderCopyEx(renderer, sprite_sheet, &clip, &renderQuad, sp->angle, NULL, flipType);
 
     // In debug mode, render bounding boxes and sprite positions
     if(debug && sp->meta->type != PARTICLE)
@@ -935,14 +933,14 @@ static void renderSprite(Sprite sp)
         renderBounds(sp);
         clip = (SDL_Rect) {743, 81, 3, 3};
         renderQuad = (SDL_Rect) {(int)sp->x_pos, (int)sp->y_pos, 3, 3};
-        SDL_RenderCopyEx(renderer, spriteSheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(renderer, sprite_sheet, &clip, &renderQuad, 0, NULL, SDL_FLIP_NONE);
     }
 }
 
 // Render all active sprites to the screen
 void renderSprites()
 {
-    for(struct ele* cursor = activeSprites; cursor != NULL; cursor = cursor->next)
+    for(struct ele* cursor = active_sprites; cursor != NULL; cursor = cursor->next)
     {
         renderSprite(cursor->sp);
     }
@@ -1014,11 +1012,11 @@ static SpriteInfo initSprite(int id, int type, int power, int hp, int width, int
 void loadSpriteInfo()
 {
     // Load the spritesheet texture into memory
-    spriteSheet = loadTexture("art/Spritesheet.bmp");
+    sprite_sheet = loadTexture("art/Spritesheet.bmp");
 
     // Make space for meta info structs
-    sprite_info = (SpriteInfo*) malloc(sizeof(SpriteInfo)*NUM_SPRITES);
-    spell_info =(SpellInfo*) malloc(sizeof(SpellInfo)*NUM_SPELLS);
+    sprite_info = (SpriteInfo*) malloc(sizeof(SpriteInfo) * NUM_SPRITES);
+    spell_info = (SpellInfo*) malloc(sizeof(SpellInfo) * NUM_SPELLS);
 
     // HUMANS
 
@@ -1136,7 +1134,7 @@ int unloadSprites()
     // Iterate over active sprites
     struct ele* prev = NULL;
     int game_over = 0;
-    for(struct ele* cursor = activeSprites; cursor != NULL;)
+    for(struct ele* cursor = active_sprites; cursor != NULL;)
     {
         // Check if the sprite is dead
         if(isDead(cursor->sp))
@@ -1164,7 +1162,7 @@ int unloadSprites()
                     prev = cursor;
                     cursor = cursor->next;
                     freeSprite(prev);
-                    activeSprites = cursor;
+                    active_sprites = cursor;
                     prev = NULL;
                 }
                 else
@@ -1189,7 +1187,7 @@ int unloadSprites()
 // Free all active sprites
 void freeActiveSprites()
 {
-    for(struct ele* cursor = activeSprites; cursor != NULL;)
+    for(struct ele* cursor = active_sprites; cursor != NULL;)
     {
         struct ele* e = cursor;
         cursor = cursor->next;
@@ -1221,5 +1219,5 @@ void freeSpriteInfo()
     free(spell_info);
 
     // Free the sprite sheet texture
-    SDL_DestroyTexture(spriteSheet);
+    SDL_DestroyTexture(sprite_sheet);
 }
