@@ -10,11 +10,11 @@
 #define CHUNK_SIZE 2048
 
 // Number of unique sound effects in the game
-#define NUM_SOUND_EFFECTS 2
+#define NUM_SOUND_EFFECTS 3
 
 // List of sound effects
 enum sound_effects
-{ SFX_HOVER, SFX_SELECT };
+{ SFX_HOVER, SFX_SELECT, SFX_BACK };
 
 // Mute the game's audio
 void setMute(void);

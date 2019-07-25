@@ -36,14 +36,13 @@ void loadSound()
     main_theme = Mix_LoadMUS("sound/music/twilight_of_the_guys.wav");
     Mix_VolumeMusic(100);
 
-    // Load all sound effects
+    // Make space for sound effect list
     sfx_list = (Mix_Chunk**) malloc(sizeof(Mix_Chunk*) * NUM_SOUND_EFFECTS);
 
-    // Plays when the user hovers a menu option
+    // Menu navigation noises
     sfx_list[SFX_HOVER] = Mix_LoadWAV("sound/effects/hover.wav");
-
-    // Plays when the user selects a menu option
     sfx_list[SFX_SELECT] = Mix_LoadWAV("sound/effects/select.wav");
+    sfx_list[SFX_BACK] = Mix_LoadWAV("sound/effects/back.wav");
 }
 
 // Free audio elements from memory

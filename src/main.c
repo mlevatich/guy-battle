@@ -211,8 +211,8 @@ int main(int argc, char** argv)
                             else
                             {
                                 mode = STAGE_SELECT;
-                                playSoundEffect(SFX_SELECT);
                                 vs_or_ai = selection;
+                                playSoundEffect(SFX_SELECT);
                             }
                         }
                         else if(key == SDLK_UP)
@@ -235,6 +235,7 @@ int main(int argc, char** argv)
                         else if(key == SDLK_ESCAPE)
                         {
                             resetGame(&mode, &selection, &vs_or_ai);
+                            playSoundEffect(SFX_BACK);
                         }
                         else if(key == SDLK_UP)
                         {
@@ -250,23 +251,39 @@ int main(int argc, char** argv)
 
                     case AI:
                         // Hit esc to pause during single player
-                        if(key == SDLK_ESCAPE) mode = PAUSE;
+                        if(key == SDLK_ESCAPE)
+                        {
+                            mode = PAUSE;
+                            playSoundEffect(SFX_SELECT);
+                        }
                         break;
 
                     case CONTROLS:
                         // Hit esc or enter to leave controls page
-                        if(key == SDLK_ESCAPE || key == SDLK_RETURN) mode = TITLE;
+                        if(key == SDLK_ESCAPE || key == SDLK_RETURN)
+                        {
+                            mode = TITLE;
+                            playSoundEffect(SFX_BACK);
+                        }
                         break;
 
                     case PAUSE:
                         // Hit esc or enter to unpause while paused
-                        if(key == SDLK_ESCAPE || key == SDLK_RETURN) mode = AI;
+                        if(key == SDLK_ESCAPE || key == SDLK_RETURN)
+                        {
+                            mode = AI;
+                            playSoundEffect(SFX_BACK);
+                        }
                         break;
 
                     case GAME_OVER_VS:
                     case GAME_OVER_AI:
                         // Hit esc or enter to return to the title screen
-                        if(key == SDLK_ESCAPE || key == SDLK_RETURN) resetGame(&mode, &selection, &vs_or_ai);
+                        if(key == SDLK_ESCAPE || key == SDLK_RETURN)
+                        {
+                            resetGame(&mode, &selection, &vs_or_ai);
+                            playSoundEffect(SFX_BACK);
+                        }
                         break;
 
                     default:
