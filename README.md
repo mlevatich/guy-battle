@@ -1,4 +1,4 @@
-# GUY_BATTLE
+# Guy Battle
 
 In this competitive fighting game, take control of a Guy,
 a powerful mage seeking to destroy the Other Guy, his mortal foe.
