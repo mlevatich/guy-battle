@@ -60,7 +60,7 @@ void launchSpells(void);
 void terrainCollisions(int* platforms, int* walls);
 
 // Check for and handle collisions between all active sprites
-void spriteCollisions();
+void spriteCollisions(void);
 
 // Update the animation frame which is drawn for all active sprites
 void updateAnimationFrames(void);

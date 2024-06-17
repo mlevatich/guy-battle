@@ -9,13 +9,13 @@ Mix_Music* main_theme;
 Mix_Chunk** sfx_list;
 
 // Mute all audio
-void setMute()
+void setMute(void)
 {
     mute = true;
 }
 
 // Start the game's main theme
-void startMusic()
+void startMusic(void)
 {
     if(!mute) Mix_PlayMusic(main_theme, -1);
 }
@@ -23,11 +23,15 @@ void startMusic()
 // Play a sound effect
 void playSoundEffect(int sfx_id)
 {
-    if(!mute) Mix_PlayChannel(-1, sfx_list[sfx_id], 0);
+    if(!mute)
+    {
+        int ch = Mix_PlayChannel(-1, sfx_list[sfx_id], 0);
+	    Mix_ExpireChannel(ch, 1000);
+    }
 }
 
 // Load audio elements into memory
-void loadSound()
+void loadSound(void)
 {
     // Initialize audio
     Mix_OpenAudio(SAMPLE_RATE, MIX_DEFAULT_FORMAT, NUM_CHANNELS, CHUNK_SIZE);
@@ -46,7 +50,7 @@ void loadSound()
 }
 
 // Free audio elements from memory
-void freeSound()
+void freeSound(void)
 {
     // Free music
     Mix_FreeMusic(main_theme);

@@ -12,7 +12,7 @@ SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 
 // Load SDL and initialize the window, renderer, audio, and data
-bool loadGame()
+bool loadGame(void)
 {
     // Initialize SDL
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) return false;
@@ -44,7 +44,7 @@ bool loadGame()
 }
 
 // Free all resources and quit SDL
-void quitGame()
+void quitGame(void)
 {
     // Free sprite metainfo
     freeSpriteInfo();
@@ -83,7 +83,7 @@ SDL_Texture* loadTexture(const char* path)
 }
 
 // Turn debug mode on
-void setDebugMode()
+void setDebugMode(void)
 {
     debug = true;
 }

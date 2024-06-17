@@ -21,7 +21,7 @@ enum directions
 { LEFT, RIGHT, UP, DOWN };
 
 // Get random number in [0, 1)
-static inline double get_rand() { return (double) rand() / (double) RAND_MAX; }
+static inline double get_rand(void) { return (double) rand() / (double) RAND_MAX; }
 
 // Convert (0,1) to (-1,1)
 static inline int convert(bool c) { return (c - (c == 0)); }

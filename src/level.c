@@ -54,19 +54,19 @@ void switchLevel(int new_level)
 /* GETTERS */
 
 // Returns current level
-int getLevel()
+int getLevel(void)
 {
     return current_foreground;
 }
 
 // Returns the platforms on the current foreground
-int* getPlatforms()
+int* getPlatforms(void)
 {
     return foregrounds[current_foreground]->platforms;
 }
 
 // Returns the walls on the current foreground
-int* getWalls()
+int* getWalls(void)
 {
     return foregrounds[current_foreground]->walls;
 }
@@ -80,7 +80,7 @@ int* getStartingPositions(int fg)
 /* PER FRAME UPDATES */
 
 // Animate the background
-void moveBackground()
+void moveBackground(void)
 {
     // Update position of the current background according to its velocity
     Background bg = backgrounds[current_background];
@@ -110,7 +110,7 @@ void moveBackground()
 }
 
 // Render the current background
-static void renderBackground()
+static void renderBackground(void)
 {
     // Draw the background at it's current position
     Background bg = backgrounds[current_background];
@@ -129,13 +129,13 @@ static void renderBackground()
 }
 
 // Render the current foreground
-static void renderForeground()
+static void renderForeground(void)
 {
     SDL_RenderCopy(renderer, foregrounds[current_foreground]->image, NULL, NULL);
 }
 
 // Render the current level
-void renderLevel()
+void renderLevel(void)
 {
     renderBackground();
     renderForeground();
@@ -184,7 +184,7 @@ static Foreground initForeground(const char* path, int* platforms, int* walls, i
 }
 
 // Load all backgrounds and foregrounds into memory
-void loadLevels()
+void loadLevels(void)
 {
     // Make space for backgrounds and foregrounds
     backgrounds = (Background*) malloc(NUM_BACKGROUNDS * sizeof(Background));
@@ -268,7 +268,7 @@ static void freeForeground(Foreground fg)
 }
 
 // Free all backgrounds and foregrounds
-void freeLevels()
+void freeLevels(void)
 {
     for(int i = 0; i < NUM_BACKGROUNDS; i++) freeBackground(backgrounds[i]);
     free(backgrounds);

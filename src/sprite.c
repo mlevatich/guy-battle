@@ -267,7 +267,7 @@ static bool isDead(Sprite sp)
 /* SPRITE EVENTS */
 
 // In 1-player mode, process AI decisions
-void takeCPUAction()
+void takeCPUAction(void)
 {
     // Human player
     int player = 0;
@@ -505,7 +505,7 @@ static void launchSpell(Sprite sp)
 }
 
 // Human sprites launch any spells they are ready to launch
-void launchSpells()
+void launchSpells(void)
 {
     // Iterate over active sprites
     for(struct ele* cursor = active_sprites; cursor != NULL; cursor = cursor->next)
@@ -581,7 +581,7 @@ static void applyCollision(Sprite sp, Sprite other)
 }
 
 // Detect and handle all collisions between sprites in this frame
-void spriteCollisions()
+void spriteCollisions(void)
 {
     // Iterate over all active sprites
     for(struct ele* cursor = active_sprites; cursor != NULL; cursor = cursor->next)
@@ -711,7 +711,7 @@ static void updateAnimationFrame(Sprite sp)
 }
 
 // Update the animation frame which is drawn for all active sprites
-void updateAnimationFrames()
+void updateAnimationFrames(void)
 {
     for(struct ele* cursor = active_sprites; cursor != NULL; cursor = cursor->next)
     {
@@ -842,7 +842,7 @@ static void moveSprite(Sprite sp)
 }
 
 // Calculate physics and update position and orientation for all active sprites
-void moveSprites()
+void moveSprites(void)
 {
     for(struct ele* cursor = active_sprites; cursor != NULL; cursor = cursor->next)
     {
@@ -876,7 +876,7 @@ static void advanceTime(Sprite sp)
 }
 
 // Advance timed sprite variables which update every frame
-void advanceTimers()
+void advanceTimers(void)
 {
     // Iterate over active sprites
     for(struct ele* cursor = active_sprites; cursor != NULL; cursor = cursor->next)
@@ -938,7 +938,7 @@ static void renderSprite(Sprite sp)
 }
 
 // Render all active sprites to the screen
-void renderSprites()
+void renderSprites(void)
 {
     for(struct ele* cursor = active_sprites; cursor != NULL; cursor = cursor->next)
     {
@@ -1009,7 +1009,7 @@ static SpriteInfo initSprite(int id, int type, int power, int hp, int width, int
 }
 
 // Fill the meta info lists with complete meta info for each sprite in the game
-void loadSpriteInfo()
+void loadSpriteInfo(void)
 {
     // Load the spritesheet texture into memory
     sprite_sheet = loadTexture("art/Spritesheet.bmp");
@@ -1129,7 +1129,7 @@ static void freeSprite(struct ele* e)
 }
 
 // Free any active sprites which have died
-int unloadSprites()
+int unloadSprites(void)
 {
     // Iterate over active sprites
     struct ele* prev = NULL;
@@ -1185,7 +1185,7 @@ int unloadSprites()
 }
 
 // Free all active sprites
-void freeActiveSprites()
+void freeActiveSprites(void)
 {
     for(struct ele* cursor = active_sprites; cursor != NULL;)
     {
@@ -1196,7 +1196,7 @@ void freeActiveSprites()
 }
 
 // Free all sprite and spell meta info
-void freeSpriteInfo()
+void freeSpriteInfo(void)
 {
     // Free sprite metainfo
     for(int i = 0; i < NUM_SPRITES; i++)

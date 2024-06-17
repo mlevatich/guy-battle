@@ -380,7 +380,7 @@ static Selection initMenuOption(int mode_in, int mode_out, double x, double y)
 }
 
 // Load the toolbar texture, toolbar elements, and selection text into memory
-void loadInterface()
+void loadInterface(void)
 {
     // Load the texture containing all toolbar elements and the alphabet
     toolbar = loadTexture("art/Toolbar.bmp");
@@ -404,7 +404,7 @@ void loadInterface()
 /* DATA UNLOADING */
 
 // Free the toolbar elements, selection options, and toolbar texture from memory
-void freeInterface()
+void freeInterface(void)
 {
     for(int i = 0; i < NUM_ELEMENTS; i++) free(element_list[i]);
     free(element_list);
